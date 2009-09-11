@@ -1,7 +1,5 @@
 (function($){
     var defaults = {
-/*         width: 600,
-        height: 400, */
         zoom: 0,
         zoom_max: 5,
         zoom_min: -5,
@@ -19,8 +17,13 @@
     var current_zoom;
     var container; //div containing image
     
+    //drag variables
+    var dx; 
+    var dy;
+    var dragged = false;
+    
     //fit image in the container
-    var fit = function(){
+    function fit(){
         var aspect_ratio = img_object.orig_width / img_object.orig_height;
         var window_ratio = settings.width /  settings.height;
         var choose_left = (aspect_ratio > window_ratio);
@@ -44,7 +47,7 @@
     }
     
     //center image in container
-    var center = function(){
+    function center(){
        img_object.object.css("top",-Math.round((img_object.display_height - options.height)/2))
                         .css("left",-Math.round((img_object.display_width - options.width)/2))
     }
@@ -60,6 +63,9 @@
         setCoords(new_x, new_y);
     }
     
+    /**
+    * set coordinates of upper left of image object
+    **/
     function setCoords(x,y)
     {
         //check new coordinates to be correct (to be in rect)
@@ -135,8 +141,7 @@
     function update_status()
     {
         zoom_object.html(
-             Math.round(100*img_object.display_height/img_object.orig_height) 
-                         + "%");
+             Math.round(100*img_object.display_height/img_object.orig_height) + "%");
     }
     
     function update_container_info()
@@ -145,12 +150,36 @@
         settings.width = container.width();
     }
     
+    function drag_start(e)
+    {
+        /* start drag event*/
+        dragged = true;
+        container.addClass("iviewer_drag_cursor");
+
+        dx = e.pageX - parseInt($(this).css("left"));
+        dy = e.pageY - parseInt($(this).css("top"));
+        return false;
+    }
+    
+    function drag(e)
+    {
+        if(dragged){
+            var ltop =  e.pageY -dy;
+            var lleft = e.pageX -dx;
+            
+            setCoords(lleft, ltop);
+            return false;
+        }
+    }
+    
+    function drag_end(e)
+    {
+        container.removeClass("iviewer_drag_cursor");
+        dragged=false;
+    }
+    
     $.fn.iviewer  = function(options)
     {
-        var dx; 
-        var dy;
-        var dragged = false;
-        
         settings = $.extend(defaults, options);
         
         if(settings.src == null)
@@ -186,29 +215,12 @@
             else
                 moveTo(img_object.display_width/2, img_object.display_height/2)
             //src attribute is after setting load event, or it won't work
-        }).attr("src",settings.src).mousedown(function(e){
-            /* start drag event*/
-            dragged = true;
-            container.addClass("iviewer_drag_cursor");
-
-            dx = e.pageX - parseInt($(this).css("left"));
-            dy = e.pageY - parseInt($(this).css("top"));
-            return false;
-        }).mousemove(function(e){
-            if(dragged){
-                var ltop =  e.pageY -dy;
-                var lleft = e.pageX -dx;
-                
-                setCoords(lleft, ltop);
-                return false;
-            }
-        }).mouseup(function(){
-            container.removeClass("iviewer_drag_cursor");
-            dragged=false;
-        }).mouseleave(function(){
-            container.removeClass("iviewer_drag_cursor");
-            dragged=false;
-        }).mousewheel(function(ev, delta)
+        }).attr("src",settings.src).
+        mousedown(drag_start).
+        mousemove(drag).
+        mouseup(drag_end).
+        mouseleave(drag_end).
+        mousewheel(function(ev, delta)
         {
             //this event is there instead of containing div, because
             //at opera it triggers many times on div
@@ -239,10 +251,5 @@
         
         update_status(); //initial status update
     };
-    
-    $.fn.iviewer.setImage = function(url)
-    {
-        img_object.object.attr("src",url);
-    }
  
  })(jQuery);
