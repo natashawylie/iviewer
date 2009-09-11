@@ -8,7 +8,7 @@
         <script type="text/javascript" src="../jquery.iviewer.js" ></script>
         <script type="text/javascript">
             $(document).ready(function(){
-               $("#viewer").iviewer({src: "test_image.jpg"});
+                  $("#viewer").iviewer({src: "test_image.jpg"});
             });
         </script>
         <link rel="stylesheet" href="../jquery.iviewer.css" />
@@ -20,10 +20,18 @@
                 border: 1px solid black;
                 position: relative;
             }
+            
+            .wrapper
+            {
+                overflow: hidden;
+            }
         </style>
     </head>
     <body>
         <h1>JQuery.iviewer test</h1>
-        <div id="viewer" class="viewer"></div>
+        <!-- wrapper div is needed for opera because it shows scroll bars for reason -->
+        <div class="wrapper">
+            <div id="viewer" class="viewer"></div>
+        </div>
     </body>
 </html>

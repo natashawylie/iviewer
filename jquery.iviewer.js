@@ -3,7 +3,11 @@
         zoom: 0,
         zoom_max: 5,
         zoom_min: -5,
-        zoom_delta: 1
+        zoom_delta: 1,
+        ui_disabled: false,
+        //event is triggered, when zoom is changed
+        //first parameter is zoom delta
+        onZoom: null
     };
     
     var settings = {};
@@ -142,6 +146,12 @@
         img_object.display_height = new_height;
                            
         setCoords(new_x, new_y);
+        
+        if(settings.onZoom != null)
+        {
+            settings.onZoom(new_zoom - current_zoom);
+        }
+        
         current_zoom = new_zoom;
         update_status();
     }
@@ -150,8 +160,14 @@
     /* update scale info in the container */
     function update_status()
     {
-        zoom_object.html(
-             Math.round(100*img_object.display_height/img_object.orig_height) + "%");
+        if(!settings.ui_disabled)
+        {
+            var percent = Math.round(100*img_object.display_height/img_object.orig_height);
+            if(percent)
+            {
+                zoom_object.html(percent + "%");
+            }
+        }
     }
     
     function update_container_info()
@@ -279,7 +295,18 @@
             return false;
         });
         
-        createui();
+        if(!settings.ui_disabled)
+        {
+            createui();
+        }
     };
+    
+    
+    /**
+    *   function for external control
+    */
+    $.fn.iviewer.zoom = function(delta) { set_zoom(current_zoom + delta); };
+    $.fn.iviewer.fit  = function(delta) { fit(); };
+    $.fn.iviewer.toOrig  = function(delta) { set_zoom(0); };
  
  })(jQuery);
