@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>jquery.iviewer test</title>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" ></script>
+        <script type="text/javascript" src="jquery.mousewheel.min.js" ></script>
+        <script type="text/javascript" src="../jquery.iviewer.js" ></script>
+        <script type="text/javascript">
+            $(document).ready(function(){
+               $("#viewer").iviewer({src: "test_image.jpg"});
+            });
+        </script>
+        <link rel="stylesheet" href="../jquery.iviewer.css" />
+        <style>
+            .viewer
+            {
+                width: 500px;
+                height: 500px;
+                border: 1px solid black;
+                position: relative;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>JQuery.iviewer test</h1>
+        <div id="viewer" class="viewer"></div>
+    </body>
+</html>
