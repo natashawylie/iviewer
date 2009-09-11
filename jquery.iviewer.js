@@ -27,9 +27,7 @@
         var aspect_ratio = img_object.orig_width / img_object.orig_height;
         var window_ratio = settings.width /  settings.height;
         var choose_left = (aspect_ratio > window_ratio);
-        
-        var x; var y;
-        
+
         if(choose_left){
             img_object.display_width = settings.width;
             img_object.display_height = settings.width / aspect_ratio;
@@ -40,19 +38,23 @@
         }
         img_object.object.attr("width",img_object.display_width)
                          .attr("height",img_object.display_height);
-        
-        moveTo(0,0);
+
+        center();
         current_zoom = -Math.floor(img_object.orig_height/img_object.display_height);
         update_status();
     }
     
     //center image in container
     function center(){
-       img_object.object.css("top",-Math.round((img_object.display_height - options.height)/2))
-                        .css("left",-Math.round((img_object.display_width - options.width)/2))
+       img_object.object.css("top",-Math.round((img_object.display_height - settings.height)/2))
+                        .css("left",-Math.round((img_object.display_width - settings.width)/2));
     }
     
-    //move the point to the center of display area
+    /**
+    *   move a point in container to the center of display area
+    *   @param x a point in container
+    *   @param y a point in container
+    **/
     function moveTo(x,y){
         var dx = x-Math.round(settings.width/2);
         var dy = y-Math.round(settings.height/2);
@@ -64,7 +66,7 @@
     }
     
     /**
-    * set coordinates of upper left of image object
+    * set coordinates of upper left corner of image object
     **/
     function setCoords(x,y)
     {
@@ -86,9 +88,16 @@
                          .css("left",x + "px");
     };
     
-    function zoomTo(zoom_delta){
-        var new_zoom = current_zoom + zoom_delta;
-        
+    
+    /**
+    * set image scale to the new_zoom
+    * @param new_zoom image scale. 
+    * if new_zoom == 0 then display image in original size
+    * if new_zoom < 0 then scale = 1/new_zoom * 100 %
+    * if new_zoom > 0 then scale = 1*new_zoom * 100 %
+    **/
+    function set_zoom(new_zoom)
+    {
         if(new_zoom < settings.zoom_min || new_zoom > settings.zoom_max)
             return;
         
@@ -136,6 +145,7 @@
         current_zoom = new_zoom;
         update_status();
     }
+
     
     /* update scale info in the container */
     function update_status()
@@ -150,6 +160,10 @@
         settings.width = container.width();
     }
     
+    
+    /**
+    *   callback for handling mousdown event to start dragging image
+    **/
     function drag_start(e)
     {
         /* start drag event*/
@@ -161,6 +175,10 @@
         return false;
     }
     
+    
+    /**
+    *   callback for handling mousmove event to drag image
+    **/
     function drag(e)
     {
         if(dragged){
@@ -172,10 +190,41 @@
         }
     }
     
+    
+    /**
+    *   callback for handling stop drag
+    **/
     function drag_end(e)
     {
         container.removeClass("iviewer_drag_cursor");
         dragged=false;
+    }
+    
+    /**
+    *   create zoom buttons info box
+    **/
+    function createui()
+    {
+        $("<div>").addClass("iviewer_zoom_in").addClass("iviewer_common").
+        addClass("iviewer_button").
+        mousedown(function(){set_zoom(current_zoom + 1); return false;}).appendTo(container);
+        
+        $("<div>").addClass("iviewer_zoom_out").addClass("iviewer_common").
+        addClass("iviewer_button").
+        mousedown(function(){set_zoom(current_zoom - 1); return false;}).appendTo(container);
+        
+        $("<div>").addClass("iviewer_zoom_zero").addClass("iviewer_common").
+        addClass("iviewer_button").
+        mousedown(function(){set_zoom(0); return false;}).appendTo(container);
+        
+        $("<div>").addClass("iviewer_zoom_fit").addClass("iviewer_common").
+        addClass("iviewer_button").
+        mousedown(function(){fit(); return false;}).appendTo(container);
+        
+        zoom_object = $("<div>").addClass("iviewer_zoom_status").addClass("iviewer_common").
+        appendTo(container);
+        
+        update_status(); //initial status update
     }
     
     $.fn.iviewer  = function(options)
@@ -224,32 +273,13 @@
         {
             //this event is there instead of containing div, because
             //at opera it triggers many times on div
-            var zoom = (delta < 0)?1:-1;
+            var zoom = (delta > 0)?1:-1;
             var new_zoom = current_zoom + zoom;
-            zoomTo(zoom);
+            set_zoom(new_zoom);
             return false;
         });
         
-        $("<div>").addClass("iviewer_zoom_in").addClass("iviewer_common").
-        addClass("iviewer_button").
-        mousedown(function(){zoomTo(1); return false;}).appendTo(container);
-        
-        $("<div>").addClass("iviewer_zoom_out").addClass("iviewer_common").
-        addClass("iviewer_button").
-        mousedown(function(){zoomTo(-1); return false;}).appendTo(container);
-        
-        $("<div>").addClass("iviewer_zoom_zero").addClass("iviewer_common").
-        addClass("iviewer_button").
-        mousedown(function(){zoomTo(-current_zoom); return false;}).appendTo(container);
-        
-        $("<div>").addClass("iviewer_zoom_fit").addClass("iviewer_common").
-        addClass("iviewer_button").
-        mousedown(function(){fit(); return false;}).appendTo(container);
-        
-        zoom_object = $("<div>").addClass("iviewer_zoom_status").addClass("iviewer_common").
-        appendTo(container);
-        
-        update_status(); //initial status update
+        createui();
     };
  
  })(jQuery);
