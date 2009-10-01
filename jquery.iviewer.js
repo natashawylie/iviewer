@@ -63,8 +63,8 @@
         var dx = x-Math.round(settings.width/2);
         var dy = y-Math.round(settings.height/2);
         
-        var new_x = parseInt(img_object.object.css("left")) - dx;
-        var new_y = parseInt(img_object.object.css("top")) - dy;
+        var new_x = parseInt(img_object.object.css("left"),10) - dx;
+        var new_y = parseInt(img_object.object.css("top"),10) - dy;
         
         setCoords(new_x, new_y);
     }
@@ -75,22 +75,28 @@
     function setCoords(x,y)
     {
         //check new coordinates to be correct (to be in rect)
-        if(y > 0) 
+        if(y > 0){
             y = 0;
-        if(x > 0) 
+        }
+        if(x > 0){
             x = 0;
-        if(y + img_object.display_height < settings.height) 
+        }
+        if(y + img_object.display_height < settings.height){
             y = settings.height - img_object.display_height;
-        if(x + img_object.display_width < settings.width) 
+        }
+        if(x + img_object.display_width < settings.width){
             x = settings.width - img_object.display_width;
-        if(img_object.display_width <= settings.width) 
+        }
+        if(img_object.display_width <= settings.width){
             x = -(img_object.display_width - settings.width)/2;
-        if(img_object.display_height <= settings.height) 
+        }
+        if(img_object.display_height <= settings.height){
             y = -(img_object.display_height - settings.height)/2;
+        }
         
         img_object.object.css("top",y + "px")
                          .css("left",x + "px");
-    };
+    }
     
     
     /**
@@ -102,16 +108,17 @@
     **/
     function set_zoom(new_zoom)
     {
-        if(new_zoom < settings.zoom_min || new_zoom > settings.zoom_max)
+        if(new_zoom < settings.zoom_min || new_zoom > settings.zoom_max){
             return;
+        }
         
         var new_x;
         var new_y;
         var new_width;
         var new_height;
         
-        var old_x = -parseInt(img_object.object.css("left")) + Math.round(settings.width/2);
-        var old_y = -parseInt(img_object.object.css("top")) + Math.round(settings.height/2);
+        var old_x = -parseInt(img_object.object.css("left"),10) + Math.round(settings.width/2);
+        var old_y = -parseInt(img_object.object.css("top"),10) + Math.round(settings.height/2);
         if (current_zoom < 0){
             old_x *= (Math.abs(current_zoom)+1);
             old_y *= (Math.abs(current_zoom)+1);
@@ -147,7 +154,7 @@
                            
         setCoords(new_x, new_y);
         
-        if(settings.onZoom != null)
+        if(settings.onZoom !== null)
         {
             settings.onZoom(new_zoom - current_zoom);
         }
@@ -186,8 +193,8 @@
         dragged = true;
         container.addClass("iviewer_drag_cursor");
 
-        dx = e.pageX - parseInt($(this).css("left"));
-        dy = e.pageY - parseInt($(this).css("top"));
+        dx = e.pageX - parseInt($(this).css("left"),10);
+        dy = e.pageY - parseInt($(this).css("top"),10);
         return false;
     }
     
@@ -247,8 +254,9 @@
     {
         settings = $.extend(defaults, options);
         
-        if(settings.src == null)
+        if(settings.src === null){
             return;
+        }
             
         current_zoom = settings.zoom;
         container = this;
@@ -275,10 +283,11 @@
             container.addClass("iviewer_cursor");
 
             if((img_object.display_width > settings.width) ||
-              (img_object.display_height > settings.height))
+               (img_object.display_height > settings.height)){
                 fit();
-            else
-                moveTo(img_object.display_width/2, img_object.display_height/2)
+            } else {
+                moveTo(img_object.display_width/2, img_object.display_height/2);
+            }
             //src attribute is after setting load event, or it won't work
         }).attr("src",settings.src).
         mousedown(drag_start).
