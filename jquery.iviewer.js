@@ -254,8 +254,8 @@
         instance.zoom = function(delta) { 
             set_zoom(instance, instance.current_zoom + delta);
         };
-        instance.fit  = function(delta) { fit(instance); };
-        instance.toOrig  = function(delta) { set_zoom(instance, 0); };
+        instance.fit  = function() { fit(instance); };
+        instance.toOrig  = function() { set_zoom(instance, 0); };
         instance.update = function() { update_container_info(instance); };
         
         /* object containing actual information about image
