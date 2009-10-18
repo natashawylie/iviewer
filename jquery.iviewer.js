@@ -9,7 +9,7 @@
         //first parameter is zoom delta
         onZoom: null
     };
-    
+
     var settings = {};
     /* object containing actual information about image
     *   @img_object.object - jquery img object
@@ -108,8 +108,13 @@
     **/
     function set_zoom(new_zoom)
     {
-        if(new_zoom < settings.zoom_min || new_zoom > settings.zoom_max){
-            return;
+        if(new_zoom <  settings.zoom_min)
+        {
+            new_zoom = settings.zoom_min;
+        }
+        else if(new_zoom > settings.zoom_max)
+        {
+            new_zoom = settings.zoom_max;
         }
         
         var new_x;
