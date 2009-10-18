@@ -8,14 +8,27 @@
         <script type="text/javascript" src="../jquery.iviewer.js" ></script>
         <script type="text/javascript">
             $(document).ready(function(){
-                  $("#viewer").iviewer({src: "test_image.jpg"});
+                  $("#viewer").iviewer(
+                       {
+                       src: "test_image.jpg", 
+                       update_on_resize: false,
+                       initCallback: function (object)
+                       {
+                           $("#in").click(function(){ object.zoom(1);}); 
+                           $("#out").click(function(){ object.zoom(-1);}); 
+                           $("#fit").click(function(){ object.fit();}); 
+                           $("#orig").click(function(){ object.toOrig();}); 
+                           $("#update").click(function(){ object.update();}); 
+                       }
+                  });
+                  $("#viewer2").iviewer({src: "test_image.jpg"});
             });
         </script>
         <link rel="stylesheet" href="../jquery.iviewer.css" />
         <style>
             .viewer
             {
-                width: 500px;
+                width: 50%;
                 height: 500px;
                 border: 1px solid black;
                 position: relative;
@@ -31,7 +44,16 @@
         <h1>JQuery.iviewer test</h1>
         <!-- wrapper div is needed for opera because it shows scroll bars for reason -->
         <div class="wrapper">
+            <span>
+                <a id="in" href="#">+</a>
+                <a id="out" href="#">-</a>
+                <a id="fit" href="#">fit</a>
+                <a id="orig" href="#">orig</a>
+                <a id="update" href="#">update</a>
+            </span>
             <div id="viewer" class="viewer"></div>
+            <br />
+            <div id="viewer2" class="viewer"></div>
         </div>
     </body>
 </html>

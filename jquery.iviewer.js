@@ -5,53 +5,40 @@
         zoom_min: -5,
         zoom_delta: 1,
         ui_disabled: false,
+        update_on_resize: true,
         //event is triggered, when zoom is changed
         //first parameter is zoom delta
-        onZoom: null
+        onZoom: null,
+        initCallback: null
     };
 
-    var settings = {};
-    /* object containing actual information about image
-    *   @img_object.object - jquery img object
-    *   @img_object.orig_{width|height} - original dimensions
-    *   @img_object.display_{width|height} - actual dimensions
-    */
-    var img_object = {};
-    var zoom_object; //object to show zoom status
-    var current_zoom;
-    var container; //div containing image
-    
-    //drag variables
-    var dx; 
-    var dy;
-    var dragged = false;
-    
     //fit image in the container
-    function fit(){
-        var aspect_ratio = img_object.orig_width / img_object.orig_height;
-        var window_ratio = settings.width /  settings.height;
+    function fit(instance){
+        var aspect_ratio = instance.img_object.orig_width / instance.img_object.orig_height;
+        var window_ratio = instance.settings.width /  instance.settings.height;
         var choose_left = (aspect_ratio > window_ratio);
 
         if(choose_left){
-            img_object.display_width = settings.width;
-            img_object.display_height = settings.width / aspect_ratio;
+            instance.img_object.display_width = instance.settings.width;
+            instance.img_object.display_height = instance.settings.width / aspect_ratio;
         }
         else {
-            img_object.display_width = settings.height * aspect_ratio;
-            img_object.display_height = settings.height;
+            instance.img_object.display_width = instance.settings.height * aspect_ratio;
+            instance.img_object.display_height = instance.settings.height;
         }
-        img_object.object.attr("width",img_object.display_width)
-                         .attr("height",img_object.display_height);
+        instance.img_object.object.attr("width",instance.img_object.display_width)
+                         .attr("height",instance.img_object.display_height);
 
-        center();
-        current_zoom = -Math.floor(img_object.orig_height/img_object.display_height);
-        update_status();
+        center(instance);
+        instance.current_zoom = -Math.floor(instance.img_object.orig_height/instance.img_object.display_height);
+        //console.log("current zoom: " + 
+        update_status(instance);
     }
     
     //center image in container
-    function center(){
-       img_object.object.css("top",-Math.round((img_object.display_height - settings.height)/2))
-                        .css("left",-Math.round((img_object.display_width - settings.width)/2));
+    function center(instance){
+       instance.img_object.object.css("top",-Math.round((instance.img_object.display_height - instance.settings.height)/2))
+                        .css("left",-Math.round((instance.img_object.display_width - instance.settings.width)/2));
     }
     
     /**
@@ -59,12 +46,12 @@
     *   @param x a point in container
     *   @param y a point in container
     **/
-    function moveTo(x,y){
-        var dx = x-Math.round(settings.width/2);
-        var dy = y-Math.round(settings.height/2);
+    function moveTo(instance, x,y){
+        var dx = x-Math.round(instance.settings.width/2);
+        var dy = y-Math.round(instance.settings.height/2);
         
-        var new_x = parseInt(img_object.object.css("left"),10) - dx;
-        var new_y = parseInt(img_object.object.css("top"),10) - dy;
+        var new_x = parseInt(instance.img_object.object.css("left"),10) - instance.dx;
+        var new_y = parseInt(instance.img_object.object.css("top"),10) - instance.dy;
         
         setCoords(new_x, new_y);
     }
@@ -72,7 +59,7 @@
     /**
     * set coordinates of upper left corner of image object
     **/
-    function setCoords(x,y)
+    function setCoords(instance, x,y)
     {
         //check new coordinates to be correct (to be in rect)
         if(y > 0){
@@ -81,20 +68,20 @@
         if(x > 0){
             x = 0;
         }
-        if(y + img_object.display_height < settings.height){
-            y = settings.height - img_object.display_height;
+        if(y + instance.img_object.display_height < instance.settings.height){
+            y = instance.settings.height - instance.img_object.display_height;
         }
-        if(x + img_object.display_width < settings.width){
-            x = settings.width - img_object.display_width;
+        if(x + instance.img_object.display_width < instance.settings.width){
+            x = instance.settings.width - instance.img_object.display_width;
         }
-        if(img_object.display_width <= settings.width){
-            x = -(img_object.display_width - settings.width)/2;
+        if(instance.img_object.display_width <= instance.settings.width){
+            x = -(instance.img_object.display_width - instance.settings.width)/2;
         }
-        if(img_object.display_height <= settings.height){
-            y = -(img_object.display_height - settings.height)/2;
+        if(instance.img_object.display_height <= instance.settings.height){
+            y = -(instance.img_object.display_height - instance.settings.height)/2;
         }
         
-        img_object.object.css("top",y + "px")
+        instance.img_object.object.css("top",y + "px")
                          .css("left",x + "px");
     }
     
@@ -106,15 +93,15 @@
     * if new_zoom < 0 then scale = 1/new_zoom * 100 %
     * if new_zoom > 0 then scale = 1*new_zoom * 100 %
     **/
-    function set_zoom(new_zoom)
+    function set_zoom(instance, new_zoom)
     {
-        if(new_zoom <  settings.zoom_min)
+        if(new_zoom <  instance.settings.zoom_min)
         {
-            new_zoom = settings.zoom_min;
+            new_zoom = instance.settings.zoom_min;
         }
-        else if(new_zoom > settings.zoom_max)
+        else if(new_zoom > instance.settings.zoom_max)
         {
-            new_zoom = settings.zoom_max;
+            new_zoom = instance.settings.zoom_max;
         }
         
         var new_x;
@@ -122,84 +109,86 @@
         var new_width;
         var new_height;
         
-        var old_x = -parseInt(img_object.object.css("left"),10) + Math.round(settings.width/2);
-        var old_y = -parseInt(img_object.object.css("top"),10) + Math.round(settings.height/2);
-        if (current_zoom < 0){
-            old_x *= (Math.abs(current_zoom)+1);
-            old_y *= (Math.abs(current_zoom)+1);
-        } else if (current_zoom > 0){
-            old_x /= (Math.abs(current_zoom)+1);
-            old_y /= (Math.abs(current_zoom)+1);
+        var old_x = -parseInt(instance.img_object.object.css("left"),10) +
+                                    Math.round(instance.settings.width/2);
+        var old_y = -parseInt(instance.img_object.object.css("top"),10) + 
+                                    Math.round(instance.settings.height/2);
+        if (instance.current_zoom < 0){
+            old_x *= (Math.abs(instance.current_zoom)+1);
+            old_y *= (Math.abs(instance.current_zoom)+1);
+        } else if (instance.current_zoom > 0){
+            old_x /= (Math.abs(instance.current_zoom)+1);
+            old_y /= (Math.abs(instance.current_zoom)+1);
         }
         
         if (new_zoom < 0){
             new_x = old_x / (Math.abs(new_zoom)+1);
             new_y = old_y / (Math.abs(new_zoom)+1);
-            new_width = img_object.orig_width /  (Math.abs(new_zoom)+1);
-            new_height = img_object.orig_height /  (Math.abs(new_zoom)+1);
+            new_width = instance.img_object.orig_width /  (Math.abs(new_zoom)+1);
+            new_height = instance.img_object.orig_height /  (Math.abs(new_zoom)+1);
         } else if (new_zoom > 0){
             new_x = old_x * (Math.abs(new_zoom)+1);
             new_y = old_y * (Math.abs(new_zoom)+1);
-            new_width = img_object.orig_width * (Math.abs(new_zoom)+1);
-            new_height = img_object.orig_height * (Math.abs(new_zoom)+1);
+            new_width = instance.img_object.orig_width * (Math.abs(new_zoom)+1);
+            new_height = instance.img_object.orig_height * (Math.abs(new_zoom)+1);
         }
         else {
             new_x = old_x;
             new_y = old_y;
-            new_width = img_object.orig_width;
-            new_height = img_object.orig_height;
+            new_width = instance.img_object.orig_width;
+            new_height = instance.img_object.orig_height;
         }
-        new_x = settings.width/2 - new_x;
-        new_y = settings.height/2 - new_y;
+        new_x = instance.settings.width/2 - new_x;
+        new_y = instance.settings.height/2 - new_y;
         
-        img_object.object.attr("width",new_width)
+        instance.img_object.object.attr("width",new_width)
                          .attr("height",new_height);
-        img_object.display_width = new_width;
-        img_object.display_height = new_height;
+        instance.img_object.display_width = new_width;
+        instance.img_object.display_height = new_height;
                            
-        setCoords(new_x, new_y);
+        setCoords(instance,new_x, new_y);
         
-        if(settings.onZoom !== null)
+        if(instance.settings.onZoom !== null)
         {
-            settings.onZoom(new_zoom - current_zoom);
+            instance.settings.onZoom(new_zoom - current_zoom);
         }
         
-        current_zoom = new_zoom;
-        update_status();
+        instance.current_zoom = new_zoom;
+        update_status(instance);
     }
 
     
     /* update scale info in the container */
-    function update_status()
+    function update_status(instance)
     {
-        if(!settings.ui_disabled)
+        if(!instance.settings.ui_disabled)
         {
-            var percent = Math.round(100*img_object.display_height/img_object.orig_height);
+            var percent = Math.round(100*instance.img_object.display_height/instance.img_object.orig_height);
             if(percent)
             {
-                zoom_object.html(percent + "%");
+                instance.zoom_object.html(percent + "%");
             }
         }
     }
     
-    function update_container_info()
+    function update_container_info(instance)
     {
-        settings.height = container.height();
-        settings.width = container.width();
+        instance.settings.height = instance.container.height();
+        instance.settings.width = instance.container.width();
     }
     
     
     /**
     *   callback for handling mousdown event to start dragging image
     **/
-    function drag_start(e)
+    function drag_start(instance, e)
     {
         /* start drag event*/
-        dragged = true;
-        container.addClass("iviewer_drag_cursor");
+        instance.dragged = true;
+        instance.container.addClass("iviewer_drag_cursor");
 
-        dx = e.pageX - parseInt($(this).css("left"),10);
-        dy = e.pageY - parseInt($(this).css("top"),10);
+        instance.dx = e.pageX - parseInt($(this).css("left"),10);
+        instance.dy = e.pageY - parseInt($(this).css("top"),10);
         return false;
     }
     
@@ -207,13 +196,13 @@
     /**
     *   callback for handling mousmove event to drag image
     **/
-    function drag(e)
+    function drag(instance, e)
     {
-        if(dragged){
-            var ltop =  e.pageY -dy;
-            var lleft = e.pageX -dx;
+        if(instance.dragged){
+            var ltop =  e.pageY -instance.dy;
+            var lleft = e.pageX -instance.dx;
             
-            setCoords(lleft, ltop);
+            setCoords(instance, lleft, ltop);
             return false;
         }
     }
@@ -222,105 +211,139 @@
     /**
     *   callback for handling stop drag
     **/
-    function drag_end(e)
+    function drag_end(instance, e)
     {
-        container.removeClass("iviewer_drag_cursor");
-        dragged=false;
+        instance.container.removeClass("iviewer_drag_cursor");
+        instance.dragged=false;
     }
     
     /**
     *   create zoom buttons info box
     **/
-    function createui()
+    function createui(instance)
     {
         $("<div>").addClass("iviewer_zoom_in").addClass("iviewer_common").
         addClass("iviewer_button").
-        mousedown(function(){set_zoom(current_zoom + 1); return false;}).appendTo(container);
+        mousedown(function(){set_zoom(instance, instance.current_zoom + 1); return false;}).appendTo(instance.container);
         
         $("<div>").addClass("iviewer_zoom_out").addClass("iviewer_common").
         addClass("iviewer_button").
-        mousedown(function(){set_zoom(current_zoom - 1); return false;}).appendTo(container);
+        mousedown(function(){set_zoom(instance, instance.current_zoom - 1); return false;}).appendTo(instance.container);
         
         $("<div>").addClass("iviewer_zoom_zero").addClass("iviewer_common").
         addClass("iviewer_button").
-        mousedown(function(){set_zoom(0); return false;}).appendTo(container);
+        mousedown(function(){set_zoom(instance, 0); return false;}).appendTo(instance.container);
         
         $("<div>").addClass("iviewer_zoom_fit").addClass("iviewer_common").
         addClass("iviewer_button").
-        mousedown(function(){fit(); return false;}).appendTo(container);
+        mousedown(function(){fit(instance); return false;}).appendTo(instance.container);
         
-        zoom_object = $("<div>").addClass("iviewer_zoom_status").addClass("iviewer_common").
-        appendTo(container);
+        instance.zoom_object = $("<div>").addClass("iviewer_zoom_status").addClass("iviewer_common").
+        appendTo(instance.container);
         
-        update_status(); //initial status update
+        update_status(instance); //initial status update
     }
     
     $.fn.iviewer  = function(options)
     {
-        settings = $.extend(defaults, options);
+        var instance = {};
         
-        if(settings.src === null){
-            return;
+        /**
+        *   external api stub
+        */
+        instance.zoom = function(delta) { 
+            set_zoom(instance, instance.current_zoom + delta);
+        };
+        instance.fit  = function(delta) { fit(instance); };
+        instance.toOrig  = function(delta) { set_zoom(instance, 0); };
+        instance.update = function() { update_container_info(instance); };
+        
+        /* object containing actual information about image
+        *   @img_object.object - jquery img object
+        *   @img_object.orig_{width|height} - original dimensions
+        *   @img_object.display_{width|height} - actual dimensions
+        */
+        instance.img_object = {};
+
+        instance.zoom_object = {}; //object to show zoom status
+        instance.current_zoom = 0;
+        
+        //drag variables
+        instance.dx = 0; 
+        instance.dy = 0;
+        instance.dragged = false;
+        
+        this.instance = instance;
+        
+        
+        instance.settings = $.extend({}, defaults, options || {});
+        
+        if(instance.settings.src === null){
+            return this;
         }
             
-        current_zoom = settings.zoom;
-        container = this;
+        instance.current_zoom = instance.settings.zoom;
+        instance.container = this;
         
-        update_container_info();
+        update_container_info(instance);
 
         //init container
         this.css("overflow","hidden");
-             
-        $(window).resize(function()
+         
+        if(instance.settings.update_on_resize == true)
         {
-            update_container_info();
-        });
+            $(window).resize(function()
+            {
+                update_container_info(instance);
+            });
+        }
                 
         //init object
-        img_object.object = $("<img>").load(function(){
-            img_object.display_width = img_object.orig_width = this.width;
-            img_object.display_height = img_object.orig_height = this.height;
+        instance.img_object.object = $("<img>").load(function(){
+            instance.img_object.display_width = instance.img_object.orig_width = this.width;
+            instance.img_object.display_height = instance.img_object.orig_height = this.height;
             $(this).css("position","absolute")
                 .css("top","0px") //this is needed, because chromium sets them
                    .css("left","0px") //auto otherwise
-                   .prependTo(container);
+                   .prependTo(instance.container);
                    
-            container.addClass("iviewer_cursor");
+            instance.container.addClass("iviewer_cursor");
 
-            if((img_object.display_width > settings.width) ||
-               (img_object.display_height > settings.height)){
-                fit();
+            if((instance.img_object.display_width > instance.settings.width) ||
+               (instance.img_object.display_height > instance.settings.height)){
+                fit(instance);
             } else {
-                moveTo(img_object.display_width/2, img_object.display_height/2);
+                moveTo(instance, instance.img_object.display_width/2, instance.img_object.display_height/2);
             }
             //src attribute is after setting load event, or it won't work
-        }).attr("src",settings.src).
-        mousedown(drag_start).
-        mousemove(drag).
-        mouseup(drag_end).
-        mouseleave(drag_end).
+        }).attr("src",instance.settings.src).
+        mousedown(function(e){
+                  return drag_start.call(this, instance,e)
+                  }).
+        mousemove(function(e){return drag.call(this, instance,e)}).
+        mouseup(function(e){return drag_end.call(this, instance,e)}).
+        mouseleave(function(e){return drag_end.call(this, instance,e)}).
         mousewheel(function(ev, delta)
         {
             //this event is there instead of containing div, because
             //at opera it triggers many times on div
             var zoom = (delta > 0)?1:-1;
-            var new_zoom = current_zoom + zoom;
-            set_zoom(new_zoom);
+            var new_zoom = instance.current_zoom + zoom;
+            set_zoom(instance, new_zoom);
             return false;
         });
         
-        if(!settings.ui_disabled)
+        if(!instance.settings.ui_disabled)
         {
-            createui();
+            createui(instance);
         }
+        
+        if(instance.settings.initCallback)
+        {
+            instance.settings.initCallback(instance);
+        }
+        
+        return this;
     };
     
-    
-    /**
-    *   function for external control
-    */
-    $.fn.iviewer.zoom = function(delta) { set_zoom(current_zoom + delta); };
-    $.fn.iviewer.fit  = function(delta) { fit(); };
-    $.fn.iviewer.toOrig  = function(delta) { set_zoom(0); };
- 
  })(jQuery);
