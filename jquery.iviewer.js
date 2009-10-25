@@ -24,15 +24,6 @@
     $.iviewer = function(e,o)
     {
         var me = this;
-        /**
-        *   external api stub
-        */
-    /*    this.zoom = function(delta) { 
-            set_zoom(this, this.current_zoom + delta);
-        };
-        this.fit  = function() { fit(this); };
-        this.toOrig  = function() { set_zoom(this, 0); };
-        this.update = function() { update_container_info(this); };*/
         
         /* object containing actual information about image
         *   @img_object.object - jquery img object
