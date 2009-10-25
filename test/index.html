@@ -14,11 +14,11 @@
                        update_on_resize: false,
                        initCallback: function (object)
                        {
-                           $("#in").click(function(){ object.zoom(1);}); 
-                           $("#out").click(function(){ object.zoom(-1);}); 
+                           $("#in").click(function(){ object.zoom_by(1);}); 
+                           $("#out").click(function(){ object.zoom_by(-1);}); 
                            $("#fit").click(function(){ object.fit();}); 
-                           $("#orig").click(function(){ object.toOrig();}); 
-                           $("#update").click(function(){ object.update();}); 
+                           $("#orig").click(function(){ object.set_zoom(0);}); 
+                           $("#update").click(function(){ object.update_container_info();}); 
                        }
                   });
                   $("#viewer2").iviewer({src: "test_image.jpg"});

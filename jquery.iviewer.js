@@ -276,6 +276,11 @@
             this.update_status();
         },
         
+        zoom_by: function(delta)
+        {
+            this.set_zoom(this.current_zoom + delta);
+        },
+        
         /* update scale info in the container */
         update_status: function()
         {
