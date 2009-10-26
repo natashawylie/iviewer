@@ -161,8 +161,10 @@
             var dx = x-Math.round(this.settings.width/2);
             var dy = y-Math.round(this.settings.height/2);
             
-            var new_x = parseInt(this.img_object.object.css("left"),10) - this.dx;
-            var new_y = parseInt(this.img_object.object.css("top"),10) - this.dy;
+            var offset = this.img_object.object.offset();
+            
+            var new_x = offset.left - this.dx;
+            var new_y = offset.top - this.dy;
             
             this.setCoords(new_x, new_y);
         },
@@ -213,11 +215,11 @@
             {
                 new_zoom = this.settings.zoom_max;
             }
+            
+            var image_offset = this.img_object.object.offset();
 
-            var old_x = -parseInt(this.img_object.object.css("left"),10) +
-                                        Math.round(this.settings.width/2);
-            var old_y = -parseInt(this.img_object.object.css("top"),10) + 
-                                        Math.round(this.settings.height/2);
+            var old_x = -image_offset.left + Math.round(this.settings.width/2);
+            var old_y = -image_offset.top + Math.round(this.settings.height/2);
 
             var new_width = $iv.scaleValue(this.img_object.orig_width, new_zoom);
             var new_height = $iv.scaleValue(this.img_object.orig_height, new_zoom);
