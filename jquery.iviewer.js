@@ -213,41 +213,17 @@
             {
                 new_zoom = this.settings.zoom_max;
             }
-            
-            var new_x;
-            var new_y;
-            var new_width;
-            var new_height;
-            
+
             var old_x = -parseInt(this.img_object.object.css("left"),10) +
                                         Math.round(this.settings.width/2);
             var old_y = -parseInt(this.img_object.object.css("top"),10) + 
                                         Math.round(this.settings.height/2);
-            if (this.current_zoom < 0){
-                old_x *= (Math.abs(this.current_zoom)+1);
-                old_y *= (Math.abs(this.current_zoom)+1);
-            } else if (this.current_zoom > 0){
-                old_x /= (Math.abs(this.current_zoom)+1);
-                old_y /= (Math.abs(this.current_zoom)+1);
-            }
-            
-            if (new_zoom < 0){
-                new_x = old_x / (Math.abs(new_zoom)+1);
-                new_y = old_y / (Math.abs(new_zoom)+1);
-                new_width = this.img_object.orig_width /  (Math.abs(new_zoom)+1);
-                new_height = this.img_object.orig_height /  (Math.abs(new_zoom)+1);
-            } else if (new_zoom > 0){
-                new_x = old_x * (Math.abs(new_zoom)+1);
-                new_y = old_y * (Math.abs(new_zoom)+1);
-                new_width = this.img_object.orig_width * (Math.abs(new_zoom)+1);
-                new_height = this.img_object.orig_height * (Math.abs(new_zoom)+1);
-            }
-            else {
-                new_x = old_x;
-                new_y = old_y;
-                new_width = this.img_object.orig_width;
-                new_height = this.img_object.orig_height;
-            }
+
+            var new_width = $iv.scaleValue(this.img_object.orig_width, new_zoom);
+            var new_height = $iv.scaleValue(this.img_object.orig_height, new_zoom);
+            var new_x = $iv.scaleValue( $iv.descaleValue(old_x, this.current_zoom), new_zoom);
+            var new_y = $iv.scaleValue( $iv.descaleValue(old_y, this.current_zoom), new_zoom);
+
             new_x = this.settings.width/2 - new_x;
             new_y = this.settings.height/2 - new_y;
             
@@ -358,5 +334,21 @@
             this.update_status(); //initial status update
         }
     });
+    
+    $iv.extend({
+        scaleValue: function(value, toZoom)
+        {
+            return toZoom < 0 ? value / (Math.abs(toZoom)+1) :
+                (toZoom > 0 ? value * (Math.abs(toZoom)+1) : value);
+        },
+        
+        descaleValue: function(value, fromZoom)
+        {
+            return fromZoom < 0 ? value * (Math.abs(fromZoom)+1) :
+                (fromZoom > 0 ? value / (Math.abs(fromZoom)+1) : value);
+        }
+    });
+    
+
     
  })(jQuery);
