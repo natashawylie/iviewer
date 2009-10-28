@@ -161,10 +161,8 @@
             var dx = x-Math.round(this.settings.width/2);
             var dy = y-Math.round(this.settings.height/2);
             
-            var offset = this.img_object.object.offset();
-            
-            var new_x = offset.left - this.dx;
-            var new_y = offset.top - this.dy;
+            var new_x = parseInt(this.img_object.object.css("left"),10) - this.dx;
+            var new_y = parseInt(this.img_object.object.css("top"),10) - this.dy;
             
             this.setCoords(new_x, new_y);
         },
@@ -194,8 +192,50 @@
                 y = -(this.img_object.display_height - this.settings.height)/2;
             }
             
+            this.img_object.x = x;
+            this.img_object.y = y;
+            
             this.img_object.object.css("top",y + "px")
                              .css("left",x + "px");
+        },
+        
+        
+        /**
+        * convert coordinates on the container to the coordinates on the image (in original size)
+        *
+        * @return object with fields x,y according to coordinates or false
+        * if initial coords are not inside image
+        **/
+        containerToImage : function (x,y)
+        {
+            if(x < this.img_object.x || y < this.img_object.y ||
+               x > this.img_object.x + this.img_object.display_width ||
+               y > this.img_object.y + this.img_object.display_height)
+            {
+                return false;
+            }
+            
+            return { x :  $iv.descaleValue(x - this.image_object.x, this.current_zoom),
+                     y :  $iv.descaleValue(y - this.image_object.y, this.current_zoom)
+            };
+        },
+        
+        /**
+        * convert coordinates on the image (in original size) to the coordinates on the container
+        *
+        * @return object with fields x,y according to coordinates or false
+        * if initial coords are not inside image
+        **/
+        imageToContainer : function (x,y)
+        {
+            if(x > this.image_object.orig_width || y > this.image_object.orig_height)
+            {
+                return false;
+            }
+            
+            return { x : this.image_object.x + $iv.scaleValue(x, this.current_zoom),
+                     y : this.image_object.y + $iv.scaleValue(y, this.current_zoom)
+            };
         },
         
         /**
@@ -215,11 +255,11 @@
             {
                 new_zoom = this.settings.zoom_max;
             }
-            
-            var image_offset = this.img_object.object.offset();
 
-            var old_x = -image_offset.left + Math.round(this.settings.width/2);
-            var old_y = -image_offset.top + Math.round(this.settings.height/2);
+            var old_x = -parseInt(this.img_object.object.css("left"),10) +
+                                        Math.round(this.settings.width/2);
+            var old_y = -parseInt(this.img_object.object.css("top"),10) + 
+                                        Math.round(this.settings.height/2);
 
             var new_width = $iv.scaleValue(this.img_object.orig_width, new_zoom);
             var new_height = $iv.scaleValue(this.img_object.orig_height, new_zoom);
