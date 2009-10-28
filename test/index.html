@@ -19,7 +19,11 @@
                            $("#fit").click(function(){ object.fit();}); 
                            $("#orig").click(function(){ object.set_zoom(0);}); 
                            $("#update").click(function(){ object.update_container_info();}); 
-                       }
+                       },
+                       onMouseMove: function(object, coords) { },
+                       onStartDrag: function(object, coords) { return false; },
+                       onZoom: function(object, coords) { return false; },
+                       onDrag: function(object, coords) { }
                   });
                   $("#viewer2").iviewer({src: "test_image.jpg"});
             });

@@ -13,12 +13,46 @@
         zoom_max: 5,
         zoom_min: -5,
         zoom_delta: 1,
+        /**
+        * if true plugin doesn't add its own controls
+        **/
         ui_disabled: false,
+        /**
+        * if false, plugin doesn't bind resize event on window and this must 
+        * be handled manually
+        **/
         update_on_resize: true,
-        //event is triggered, when zoom is changed
-        //first parameter is zoom delta
+        /**
+        * event is triggered when zoom value is changed
+        * @param object instance current object
+        * @param int new zoom value
+        * @return boolean if false zoom action is aborted
+        **/
         onZoom: null,
-        initCallback: null
+        /**
+        * callback is fired after plugin setup
+        * @param object instance current object
+        **/
+        initCallback: null,
+        /**
+        * event is fired on drag begin
+        * @param object instance current object
+        * @param object coords mouse coordinates on the image
+        * @return boolean if false is returned, drag action is aborted
+        **/
+        onStartDrag: null,
+        /**
+        * event is fired on drag action
+        * @param object instance current object
+        * @param object coords mouse coordinates on the image
+        **/
+        onDrag: null,
+        /**
+        * event is fired when mouse moves over image
+        * @param object instance current object
+        * @param object coords mouse coordinates on the image
+        **/
+        onMouseMove: null
     };
     
     $.iviewer = function(e,o)
@@ -228,14 +262,28 @@
         **/
         imageToContainer : function (x,y)
         {
-            if(x > this.image_object.orig_width || y > this.image_object.orig_height)
+            if(x > this.img_object.orig_width || y > this.img_object.orig_height)
             {
                 return false;
             }
             
-            return { x : this.image_object.x + $iv.scaleValue(x, this.current_zoom),
-                     y : this.image_object.y + $iv.scaleValue(y, this.current_zoom)
+            return { x : this.img_object.x + $iv.scaleValue(x, this.current_zoom),
+                     y : this.img_object.y + $iv.scaleValue(y, this.current_zoom)
             };
+        },
+        
+        /**
+        * get mouse coordinates on the image
+        * @param e - object containing pageX and pageY fields, e.g. mouse event object
+        *
+        * @return object with fields x,y according to coordinates or false
+        * if initial coords are not inside image
+        **/
+        getMouseCoords : function(e)
+        {
+            var img_offset = this.img_object.object.offset();
+            
+            return this.imageToContainer(e.pageX - img_offset.left, e.pageY - img_offset.top);
         },
         
         /**
@@ -247,6 +295,11 @@
         **/
         set_zoom: function(new_zoom)
         {
+            if(this.settings.onZoom && !this.settings.onZoom(new_zoom - this.current_zoom))
+            {
+                return;
+            }
+            
             if(new_zoom <  this.settings.zoom_min)
             {
                 new_zoom = this.settings.zoom_min;
@@ -275,12 +328,7 @@
             this.img_object.display_height = new_height;
                                
             this.setCoords(new_x, new_y);
-            
-            if(this.settings.onZoom !== null)
-            {
-                this.settings.onZoom(new_zoom - current_zoom);
-            }
-            
+
             this.current_zoom = new_zoom;
             this.update_status();
         },
@@ -314,6 +362,12 @@
         **/
         drag_start: function(e)
         {
+            if(this.settings.onStartDrag && 
+               !this.settings.onStartDrag(this,this.getMouseCoords(e)))
+            {
+                return false;
+            }
+            
             /* start drag event*/
             this.dragged = true;
             this.container.addClass("iviewer_drag_cursor");
@@ -328,7 +382,13 @@
         **/
         drag: function(e)
         {
+            this.settings.onMouseMove && 
+                    this.settings.onMouseMove(this,this.getMouseCoords(e));
+            
             if(this.dragged){
+                this.settings.onDrag && 
+                        this.settings.onDrag(this,this.getMouseCoords(e));
+                        
                 var ltop =  e.pageY -this.dy;
                 var lleft = e.pageX -this.dx;
                 
