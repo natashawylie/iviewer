@@ -84,11 +84,11 @@
             //src attribute is after setting load event, or it won't work
         }).attr("src",this.settings.src).
         mousedown(function(e){
-                  return me.drag_start(this,e);
+                  return me.drag_start(e);
                   }).
-        mousemove(function(e){return me.drag(this,e)}).
-        mouseup(function(e){return me.drag_end(this,e)}).
-        mouseleave(function(e){return me.drag_end(this,e)}).
+        mousemove(function(e){return me.drag(e)}).
+        mouseup(function(e){return me.drag_end(e)}).
+        mouseleave(function(e){return me.drag_end(e)}).
         mousewheel(function(ev, delta)
         {
             //this event is there instead of containing div, because
@@ -312,22 +312,21 @@
         /**
         *   callback for handling mousdown event to start dragging image
         **/
-        drag_start: function(el,e)
+        drag_start: function(e)
         {
-            var $el = $(el);
             /* start drag event*/
             this.dragged = true;
             this.container.addClass("iviewer_drag_cursor");
     
-            this.dx = e.pageX - parseInt($el.css("left"),10);
-            this.dy = e.pageY - parseInt($el.css("top"),10);
+            this.dx = e.pageX - this.img_object.x;
+            this.dy = e.pageY - this.img_object.y;
             return false;
         },
         
         /**
         *   callback for handling mousmove event to drag image
         **/
-        drag: function(el,e)
+        drag: function(e)
         {
             if(this.dragged){
                 var ltop =  e.pageY -this.dy;
@@ -341,7 +340,7 @@
         /**
         *   callback for handling stop drag
         **/
-        drag_end: function(el,e)
+        drag_end: function(e)
         {
             this.container.removeClass("iviewer_drag_cursor");
             this.dragged=false;
