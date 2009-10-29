@@ -24,38 +24,32 @@
         update_on_resize: true,
         /**
         * event is triggered when zoom value is changed
-        * @param object instance current object
         * @param int new zoom value
         * @return boolean if false zoom action is aborted
         **/
         onZoom: null,
         /**
         * callback is fired after plugin setup
-        * @param object instance current object
         **/
         initCallback: null,
         /**
         * event is fired on drag begin
-        * @param object instance current object
         * @param object coords mouse coordinates on the image
         * @return boolean if false is returned, drag action is aborted
         **/
         onStartDrag: null,
         /**
         * event is fired on drag action
-        * @param object instance current object
         * @param object coords mouse coordinates on the image
         **/
         onDrag: null,
         /**
         * event is fired when mouse moves over image
-        * @param object instance current object
         * @param object coords mouse coordinates on the image
         **/
         onMouseMove: null,
         /**
         * mouse click event
-        * @param object instance current object
         * @param object coords mouse coordinates on the image
         **/
         onClick: null
@@ -123,6 +117,7 @@
             }
             //src attribute is after setting load event, or it won't work
         }).attr("src",this.settings.src).
+        //bind mouse events
         mousedown(function(e){ return me.drag_start(e); }).
         mousemove(function(e){return me.drag(e)}).
         mouseup(function(e){return me.drag_end(e)}).
@@ -145,7 +140,7 @@
         
         if(this.settings.initCallback)
         {
-            this.settings.initCallback(this);
+            this.settings.initCallback.call(this);
         }
     }
     
@@ -300,7 +295,7 @@
         **/
         set_zoom: function(new_zoom)
         {
-            if(this.settings.onZoom && !this.settings.onZoom(new_zoom - this.current_zoom))
+            if(this.settings.onZoom && !this.settings.onZoom.call(new_zoom - this.current_zoom))
             {
                 return;
             }
@@ -368,7 +363,7 @@
         drag_start: function(e)
         {
             if(this.settings.onStartDrag && 
-               !this.settings.onStartDrag(this,this.getMouseCoords(e)))
+               !this.settings.onStartDrag.call(this,this.getMouseCoords(e)))
             {
                 return false;
             }
@@ -388,11 +383,11 @@
         drag: function(e)
         {
             this.settings.onMouseMove && 
-                    this.settings.onMouseMove(this,this.getMouseCoords(e));
+                    this.settings.onMouseMove.call(this,this.getMouseCoords(e));
             
             if(this.dragged){
                 this.settings.onDrag && 
-                        this.settings.onDrag(this,this.getMouseCoords(e));
+                        this.settings.onDrag.call(this,this.getMouseCoords(e));
                         
                 var ltop =  e.pageY -this.dy;
                 var lleft = e.pageX -this.dx;
@@ -414,8 +409,8 @@
         click: function(e)
         {
             this.settings.onClick && 
-                    this.settings.onClick(this,this.getMouseCoords(e));
-        }
+                    this.settings.onClick.call(this,this.getMouseCoords(e));
+        },
         
         /**
         *   create zoom buttons info box
