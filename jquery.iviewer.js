@@ -123,11 +123,10 @@
             }
             //src attribute is after setting load event, or it won't work
         }).attr("src",this.settings.src).
-        mousedown(function(e){
-                  return me.drag_start(e);
-                  }).
+        mousedown(function(e){ return me.drag_start(e); }).
         mousemove(function(e){return me.drag(e)}).
         mouseup(function(e){return me.drag_end(e)}).
+        click(function(e){return me.click(e)}).
         mouseleave(function(e){return me.drag_end(e)}).
         mousewheel(function(ev, delta)
         {
