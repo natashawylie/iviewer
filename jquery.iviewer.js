@@ -298,7 +298,7 @@
         **/
         set_zoom: function(new_zoom)
         {
-            if(this.settings.onZoom && !this.settings.onZoom.call(new_zoom - this.current_zoom))
+            if(this.settings.onZoom && this.settings.onZoom.call(new_zoom - this.current_zoom) == false)
             {
                 return;
             }
@@ -366,7 +366,7 @@
         drag_start: function(e)
         {
             if(this.settings.onStartDrag && 
-               !this.settings.onStartDrag.call(this,this.getMouseCoords(e)))
+               this.settings.onStartDrag.call(this,this.getMouseCoords(e)) == false)
             {
                 return false;
             }
