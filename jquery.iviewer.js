@@ -74,8 +74,6 @@
         this.dy = 0;
         this.dragged = false;
         
-        
-        
         this.settings = $.extend({}, defaults, o || {});
         
         if(this.settings.src === null){
@@ -97,6 +95,9 @@
                 me.update_container_info();
             });
         }
+        
+        this.img_object.x = 0;
+        this.img_object.y = 0;
         
         //init object
         this.img_object.object = $("<img>").load(function(){
@@ -181,8 +182,8 @@
         //center image in container
         center: function()
         {
-           this.img_object.object.css("top",-Math.round((this.img_object.display_height - this.settings.height)/2))
-                            .css("left",-Math.round((this.img_object.display_width - this.settings.width)/2));
+            this.setCoords(-Math.round((this.img_object.display_height - this.settings.height)/2),
+                           -Math.round((this.img_object.display_width - this.settings.width)/2));
         },
         
         /**
@@ -195,8 +196,8 @@
             var dx = x-Math.round(this.settings.width/2);
             var dy = y-Math.round(this.settings.height/2);
             
-            var new_x = parseInt(this.img_object.object.css("left"),10) - this.dx;
-            var new_y = parseInt(this.img_object.object.css("top"),10) - this.dy;
+            var new_x = this.img_object.x - this.dx;
+            var new_y = this.img_object.y - this.dy;
             
             this.setCoords(new_x, new_y);
         },
@@ -249,8 +250,8 @@
                 return false;
             }
             
-            return { x :  $iv.descaleValue(x - this.image_object.x, this.current_zoom),
-                     y :  $iv.descaleValue(y - this.image_object.y, this.current_zoom)
+            return { x :  $iv.descaleValue(x - this.img_object.x, this.current_zoom),
+                     y :  $iv.descaleValue(y - this.img_object.y, this.current_zoom)
             };
         },
         
@@ -282,8 +283,10 @@
         getMouseCoords : function(e)
         {
             var img_offset = this.img_object.object.offset();
-            
-            return this.imageToContainer(e.pageX - img_offset.left, e.pageY - img_offset.top);
+
+            return { x : $iv.descaleValue(e.pageX - img_offset.left, this.current_zoom),
+                     y : $iv.descaleValue(e.pageY - img_offset.top, this.current_zoom)
+            };
         },
         
         /**

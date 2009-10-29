@@ -57,31 +57,31 @@
                 $("#viewer1").iviewer({
                     src: "test_active_with_objects.GIF",
 
-                    onClick: function(x, y) {
-                        var object = whereIam(x, y);
+                    onClick: function(coords) {
+                        var object = whereIam(coords.x, coords.y);
                         
                         if (object) 
-                            alert('Clicked at ('+x+', '+y+'). This is '+object.title);
+                            alert('Clicked at ('+coords.x+', '+coords.y+'). This is '+object.title);
                     },
 
-                    onMouseMove: function(x, y) {
-                        var object = whereIam(x, y);
+                    onMouseMove: function(coords) {
+                        var object = whereIam(coords.x, coords.y);
                         
                         if (object) {
-                            $('#status').html('You are in ('+x+', '+y+'). This is '+object.title);
+                            $('#status').html('You are in ('+coords.x+', '+coords.y+'). This is '+object.title);
                             this.container.css('cursor', 'crosshair');
                         } else {
-                            $('#status').html('You are in ('+x+', '+y+'). This is empty space');
+                            $('#status').html('You are in ('+coords.x+', '+coords.y+'). This is empty space');
                             this.container.css('cursor', null);
                         }                            
                     },
                     
-                    onBeforeDrag: function(x, y) {
+                    onBeforeDrag: function(coords) {
                         // remove pointer if image is getting moving
                         // because it's not actual anymore
                         $('#pointer').css('display', 'none');
                         // forbid dragging when cursor is whithin the object
-                        return whereIam(x, y) ? false : true;     
+                        return whereIam(coords.x, coords.y) ? false : true;     
                     },
                     
                     onZoom: function() {
