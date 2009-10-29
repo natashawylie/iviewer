@@ -52,7 +52,13 @@
         * @param object instance current object
         * @param object coords mouse coordinates on the image
         **/
-        onMouseMove: null
+        onMouseMove: null,
+        /**
+        * mouse click event
+        * @param object instance current object
+        * @param object coords mouse coordinates on the image
+        **/
+        onClick: null
     };
     
     $.iviewer = function(e,o)
@@ -405,6 +411,12 @@
             this.container.removeClass("iviewer_drag_cursor");
             this.dragged=false;
         },
+        
+        click: function(e)
+        {
+            this.settings.onClick && 
+                    this.settings.onClick(this,this.getMouseCoords(e));
+        }
         
         /**
         *   create zoom buttons info box
