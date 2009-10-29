@@ -43,11 +43,14 @@
                     if (object.title == $(a).html()) {
                         $("#viewer1").each(function(){
                             var center = object.getCenter();
-                            var offset = this.iviewer.originalToOffset(center.x, center.y);
+                            var offset = this.iviewer.imageToContainer(center.x, center.y);
+                            var containerOffset = this.iviewer.container.offset();
                             var pointer = $('#pointer');
+                            offset.x += containerOffset.left - 20;
+                            offset.y += containerOffset.top - 40;
                             pointer.css('display', 'block');
-                            pointer.css('left', parseInt(this.style.left+offset.left-20)+'px');
-                            pointer.css('top', parseInt(this.style.top+offset.top-40)+'px');
+                            pointer.css('left', offset.x+'px');
+                            pointer.css('top', offset.y+'px');
                         });
                     }                    
                 });
@@ -68,10 +71,10 @@
                         var object = whereIam(coords.x, coords.y);
                         
                         if (object) {
-                            $('#status').html('You are in ('+coords.x+', '+coords.y+'). This is '+object.title);
+                            $('#status').html('You are in ('+coords.x.toFixed(1)+', '+coords.y.toFixed(1)+'). This is '+object.title);
                             this.container.css('cursor', 'crosshair');
                         } else {
-                            $('#status').html('You are in ('+coords.x+', '+coords.y+'). This is empty space');
+                            $('#status').html('You are in ('+coords.x.toFixed(1)+', '+coords.y.toFixed(1)+'). This is empty space');
                             this.container.css('cursor', null);
                         }                            
                     },
@@ -88,6 +91,10 @@
                         // remove pointer if image is resizing
                         // because it's not actual anymore
                         $('#pointer').css('display', 'none');
+                    },
+                    
+                    initCallback: function() {
+                        this.container.context.iviewer = this;
                     }
                 });
             });
