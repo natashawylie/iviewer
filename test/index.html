@@ -14,12 +14,13 @@
                        {
                        src: "test_image.jpg", 
                        update_on_resize: false,
-                       initCallback: function (object)
+                       initCallback: function ()
                        {
+                           var object = this;
                            $("#in").click(function(){ object.zoom_by(1);}); 
                            $("#out").click(function(){ object.zoom_by(-1);}); 
                            $("#fit").click(function(){ object.fit();}); 
-                           $("#orig").click(function(){ object.set_zoom(0);}); 
+                           $("#orig").click(function(){  object.set_zoom(100); }); 
                            $("#update").click(function(){ object.update_container_info();});
                        },
                        onMouseMove: function(object, coords) { },

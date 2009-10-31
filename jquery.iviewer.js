@@ -495,7 +495,7 @@
             
             $("<div>").addClass("iviewer_zoom_zero").addClass("iviewer_common").
             addClass("iviewer_button").
-            mousedown(function(){me.set_zoom(0); return false;}).appendTo(this.container);
+            mousedown(function(){me.set_zoom(100); return false;}).appendTo(this.container);
             
             $("<div>").addClass("iviewer_zoom_fit").addClass("iviewer_common").
             addClass("iviewer_button").
@@ -519,7 +519,5 @@
             return value * 100 / fromZoom;
         }
     });
-    
 
-    
  })(jQuery);
