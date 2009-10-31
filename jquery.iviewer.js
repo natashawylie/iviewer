@@ -165,21 +165,11 @@
     
             if(choose_left){
                 new_zoom = this.settings.width / this.img_object.orig_width * 100;
-             //   this.img_object.display_width = this.settings.width;
-             //   this.img_object.display_height = this.settings.width / aspect_ratio;
             }
             else {
                 new_zoom = this.settings.height / this.img_object.orig_height * 100;
-          //      this.img_object.display_width = this.settings.height * aspect_ratio;
-          //      this.img_object.display_height = this.settings.height;
             }
-       //     this.img_object.object.attr("width",this.img_object.display_width)
-          //                   .attr("height",this.img_object.display_height);
-    
-   //         this.center();
-          //  this.current_zoom = -Math.floor(this.img_object.orig_height/this.img_object.display_height);
-            //console.log("current zoom: " + 
-          //  this.update_status();
+
           this.set_zoom(new_zoom);
         },
         
@@ -342,9 +332,24 @@
         
         zoom_by: function(delta)
         {
-            var next_rate = this.find_closest_zoom_rate(this.current_zoom) + delta;
-            this.set_zoom(this.settings.zoom_base* 
-                  Math.pow(this.settings.zoom_delta, next_rate));
+            var closest_rate = this.find_closest_zoom_rate(this.current_zoom);
+            if(delta < 0 && closest_rate == 1)
+            {
+                closest_rate = -1;
+            }
+            var next_rate = closest_rate + delta;
+            var next_zoom = this.settings.zoom_base * Math.pow(this.settings.zoom_delta, next_rate)
+            if(delta > 0 && next_zoom < this.current_zoom)
+            {
+                next_zoom *= this.settings.zoom_delta;
+            }
+            
+            if(delta < 0 && next_zoom > this.current_zoom)
+            {
+                next_zoom /= this.settings.zoom_delta;
+            }
+            
+            this.set_zoom(next_zoom);
         },
         
         find_closest_zoom_rate: function(value)
@@ -361,12 +366,12 @@
             var sgn = (value > this.settings.zoom_base)?1:-1;
             
             var mltplr = this.settings.zoom_delta;
-            var rate = mltplr;
+            var rate = 1;
             
-            while(Math.abs(func(this.settings.zoom_base, rate) - value) > 
-                  Math.abs(func(this.settings.zoom_base, rate * mltplr) - value))
+            while(Math.abs(func(this.settings.zoom_base, rate * mltplr) - value) > 
+                  Math.abs(func(this.settings.zoom_base, (rate + 1)* mltplr) - value))
             {
-                rate *= mltplr;
+                rate++;
             }
             
             return sgn * rate;
