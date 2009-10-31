@@ -11,9 +11,9 @@
     var defaults = {
         zoom: 100,
         zoom_base: 100,
-        zoom_max: 400,
+        zoom_max: 800,
         zoom_min: 25,
-        zoom_delta: 2,
+        zoom_delta: 1.4,
         /**
         * if true plugin doesn't add its own controls
         **/
@@ -333,10 +333,10 @@
         zoom_by: function(delta)
         {
             var closest_rate = this.find_closest_zoom_rate(this.current_zoom);
-            if(delta < 0 && closest_rate == 1)
+    /*        if(delta < 0 && closest_rate == 1)
             {
                 closest_rate = -1;
-            }
+            }*/
             var next_rate = closest_rate + delta;
             var next_zoom = this.settings.zoom_base * Math.pow(this.settings.zoom_delta, next_rate)
             if(delta > 0 && next_zoom < this.current_zoom)
@@ -356,7 +356,7 @@
         {
             if(value == this.settings.zoom_base)
             {
-                return 1;
+                return 0;
             }
             
             function div(val1,val2) { return val1 / val2 };
@@ -368,8 +368,8 @@
             var mltplr = this.settings.zoom_delta;
             var rate = 1;
             
-            while(Math.abs(func(this.settings.zoom_base, rate * mltplr) - value) > 
-                  Math.abs(func(this.settings.zoom_base, (rate + 1)* mltplr) - value))
+            while(Math.abs(func(this.settings.zoom_base, Math.pow(mltplr,rate)) - value) > 
+                  Math.abs(func(this.settings.zoom_base, Math.pow(mltplr,rate+1)) - value))
             {
                 rate++;
             }
@@ -460,11 +460,11 @@
             
             $("<div>").addClass("iviewer_zoom_in").addClass("iviewer_common").
             addClass("iviewer_button").
-            mousedown(function(){me.set_zoom(me.current_zoom + 1); return false;}).appendTo(this.container);
+            mousedown(function(){me.zoom_by(1); return false;}).appendTo(this.container);
             
             $("<div>").addClass("iviewer_zoom_out").addClass("iviewer_common").
             addClass("iviewer_button").
-            mousedown(function(){me.set_zoom(me.current_zoom - 1); return false;}).appendTo(this.container);
+            mousedown(function(){me.zoom_by(- 1); return false;}).appendTo(this.container);
             
             $("<div>").addClass("iviewer_zoom_zero").addClass("iviewer_common").
             addClass("iviewer_button").
