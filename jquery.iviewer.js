@@ -168,7 +168,7 @@
     var $iv = $.iviewer;
     
     $iv.fn = $iv.prototype = {
-        iviewer : "0.3"
+        iviewer : "0.4"
     }
     $iv.fn.extend = $iv.extend = $.extend;
     
