@@ -9,10 +9,27 @@
     }
     
     var defaults = {
-        zoom: 100,
+        /**
+        * start zoom value for image, not used now
+        * may be equal to "fit" to fit image into container or scale in % 
+        **/
+        zoom: "fit",
+        /**
+        * base value to scale image
+        **/
         zoom_base: 100,
+        /**
+        * maximum zoom
+        **/
         zoom_max: 800,
+        /**
+        * minimum zoom
+        **/
         zoom_min: 25,
+        /**
+        * base of rate multiplier.
+        * zoom is calculated by formula: zoom_base * zoom_delta^rate
+        **/
         zoom_delta: 1.4,
         /**
         * if true plugin doesn't add its own controls
@@ -111,11 +128,13 @@
                    
             me.container.addClass("iviewer_cursor");
 
-            if((me.img_object.display_width > me.settings.width) ||
-               (me.img_object.display_height > me.settings.height)){
+            if(me.settings.zoom == "fit")
+            {
                 me.fit();
-            } else {
-                me.moveTo(me.img_object.display_width/2, me.img_object.display_height/2);
+            }
+            else
+            {
+                me.set_zoom(me.settings.zoom);
             }
             //src attribute is after setting load event, or it won't work
         }).attr("src",this.settings.src).
@@ -155,7 +174,9 @@
     
     $iv.fn.extend({
                   
-        //fit image in the container
+        /**
+        * fits image in the container
+        **/
         fit: function()
         {
             var aspect_ratio = this.img_object.orig_width / this.img_object.orig_height;
@@ -173,7 +194,9 @@
           this.set_zoom(new_zoom);
         },
         
-        //center image in container
+        /**
+        * center image in container
+        **/
         center: function()
         {
             this.setCoords(-Math.round((this.img_object.display_height - this.settings.height)/2),
@@ -285,10 +308,7 @@
         
         /**
         * set image scale to the new_zoom
-        * @param new_zoom image scale. 
-        * if new_zoom == 0 then display image in original size
-        * if new_zoom < 0 then scale = 1/new_zoom * 100 %
-        * if new_zoom > 0 then scale = 1*new_zoom * 100 %
+        * @param new_zoom image scale in % 
         **/
         set_zoom: function(new_zoom)
         {
@@ -330,13 +350,15 @@
             this.update_status();
         },
         
+        /**
+        * changes zoom scale by delta
+        * zoom is calculated by formula: zoom_base * zoom_delta^rate 
+        * @param Integer delta number to add to the current multiplier rate number 
+        **/
         zoom_by: function(delta)
         {
             var closest_rate = this.find_closest_zoom_rate(this.current_zoom);
-    /*        if(delta < 0 && closest_rate == 1)
-            {
-                closest_rate = -1;
-            }*/
+
             var next_rate = closest_rate + delta;
             var next_zoom = this.settings.zoom_base * Math.pow(this.settings.zoom_delta, next_rate)
             if(delta > 0 && next_zoom < this.current_zoom)
@@ -352,6 +374,11 @@
             this.set_zoom(next_zoom);
         },
         
+        /**
+        * finds closest multiplier rate for value
+        * basing on zoom_base and zoom_delta values from settings
+        * @param Number value zoom value to examine
+        **/
         find_closest_zoom_rate: function(value)
         {
             if(value == this.settings.zoom_base)
