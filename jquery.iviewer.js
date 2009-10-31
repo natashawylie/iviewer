@@ -9,10 +9,11 @@
     }
     
     var defaults = {
-        zoom: 0,
-        zoom_max: 5,
-        zoom_min: -5,
-        zoom_delta: 1,
+        zoom: 100,
+        zoom_base: 100,
+        zoom_max: 400,
+        zoom_min: 25,
+        zoom_delta: 2,
         /**
         * if true plugin doesn't add its own controls
         **/
@@ -67,7 +68,6 @@
         this.img_object = {};
 
         this.zoom_object = {}; //object to show zoom status
-        this.current_zoom = 0;
         
         //drag variables
         this.dx = 0; 
@@ -75,6 +75,7 @@
         this.dragged = false;
         
         this.settings = $.extend({}, defaults, o || {});
+        this.current_zoom = this.settings.zoom;
         
         if(this.settings.src === null){
             return;
@@ -129,8 +130,7 @@
             //this event is there instead of containing div, because
             //at opera it triggers many times on div
             var zoom = (delta > 0)?1:-1;
-            var new_zoom = me.current_zoom + zoom;
-            me.set_zoom(new_zoom);
+            me.zoom_by(zoom);
             return false;
         });
         
@@ -161,22 +161,26 @@
             var aspect_ratio = this.img_object.orig_width / this.img_object.orig_height;
             var window_ratio = this.settings.width /  this.settings.height;
             var choose_left = (aspect_ratio > window_ratio);
+            var new_zoom = 0;
     
             if(choose_left){
-                this.img_object.display_width = this.settings.width;
-                this.img_object.display_height = this.settings.width / aspect_ratio;
+                new_zoom = this.settings.width / this.img_object.orig_width * 100;
+             //   this.img_object.display_width = this.settings.width;
+             //   this.img_object.display_height = this.settings.width / aspect_ratio;
             }
             else {
-                this.img_object.display_width = this.settings.height * aspect_ratio;
-                this.img_object.display_height = this.settings.height;
+                new_zoom = this.settings.height / this.img_object.orig_height * 100;
+          //      this.img_object.display_width = this.settings.height * aspect_ratio;
+          //      this.img_object.display_height = this.settings.height;
             }
-            this.img_object.object.attr("width",this.img_object.display_width)
-                             .attr("height",this.img_object.display_height);
+       //     this.img_object.object.attr("width",this.img_object.display_width)
+          //                   .attr("height",this.img_object.display_height);
     
-            this.center();
-            this.current_zoom = -Math.floor(this.img_object.orig_height/this.img_object.display_height);
+   //         this.center();
+          //  this.current_zoom = -Math.floor(this.img_object.orig_height/this.img_object.display_height);
             //console.log("current zoom: " + 
-            this.update_status();
+          //  this.update_status();
+          this.set_zoom(new_zoom);
         },
         
         //center image in container
@@ -298,7 +302,7 @@
         **/
         set_zoom: function(new_zoom)
         {
-            if(this.settings.onZoom && this.settings.onZoom.call(new_zoom - this.current_zoom) == false)
+            if(this.settings.onZoom && this.settings.onZoom.call(this, new_zoom) == false)
             {
                 return;
             }
@@ -338,7 +342,34 @@
         
         zoom_by: function(delta)
         {
-            this.set_zoom(this.current_zoom + delta);
+            var next_rate = this.find_closest_zoom_rate(this.current_zoom) + delta;
+            this.set_zoom(this.settings.zoom_base* 
+                  Math.pow(this.settings.zoom_delta, next_rate));
+        },
+        
+        find_closest_zoom_rate: function(value)
+        {
+            if(value == this.settings.zoom_base)
+            {
+                return 1;
+            }
+            
+            function div(val1,val2) { return val1 / val2 };
+            function mul(val1,val2) { return val1 * val2 };
+            
+            var func = (value > this.settings.zoom_base)?mul:div;
+            var sgn = (value > this.settings.zoom_base)?1:-1;
+            
+            var mltplr = this.settings.zoom_delta;
+            var rate = mltplr;
+            
+            while(Math.abs(func(this.settings.zoom_base, rate) - value) > 
+                  Math.abs(func(this.settings.zoom_base, rate * mltplr) - value))
+            {
+                rate *= mltplr;
+            }
+            
+            return sgn * rate;
         },
         
         /* update scale info in the container */
@@ -448,14 +479,12 @@
     $iv.extend({
         scaleValue: function(value, toZoom)
         {
-            return toZoom < 0 ? value / (Math.abs(toZoom)+1) :
-                (toZoom > 0 ? value * (Math.abs(toZoom)+1) : value);
+            return value * toZoom / 100;
         },
         
         descaleValue: function(value, fromZoom)
         {
-            return fromZoom < 0 ? value * (Math.abs(fromZoom)+1) :
-                (fromZoom > 0 ? value / (Math.abs(fromZoom)+1) : value);
+            return value * 100 / fromZoom;
         }
     });
     
