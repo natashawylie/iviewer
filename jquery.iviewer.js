@@ -98,7 +98,6 @@
             return;
         }
             
-        this.current_zoom = this.settings.zoom;
         this.container = $(e);
         
         this.update_container_info();
@@ -118,26 +117,8 @@
         this.img_object.y = 0;
         
         //init object
-        this.img_object.object = $("<img>").load(function(){
-            me.img_object.display_width = me.img_object.orig_width = this.width;
-            me.img_object.display_height = me.img_object.orig_height = this.height;
-            $(this).css("position","absolute")
-                .css("top","0px") //this is needed, because chromium sets them
-                   .css("left","0px") //auto otherwise
-                   .prependTo(me.container);
-                   
-            me.container.addClass("iviewer_cursor");
-
-            if(me.settings.zoom == "fit")
-            {
-                me.fit();
-            }
-            else
-            {
-                me.set_zoom(me.settings.zoom);
-            }
-            //src attribute is after setting load event, or it won't work
-        }).attr("src",this.settings.src).
+        this.img_object.object = $("<img>").
+        css({ position: "absolute", top :"0px", left: "0px"}). //this is needed, because chromium sets them auto otherwise
         //bind mouse events
         mousedown(function(e){ return me.drag_start(e); }).
         mousemove(function(e){return me.drag(e)}).
@@ -152,6 +133,9 @@
             me.zoom_by(zoom);
             return false;
         });
+
+        this.img_object.object.prependTo(me.container);
+        this.loadImage(this.settings.src);
         
         if(!this.settings.ui_disabled)
         {
@@ -168,11 +152,38 @@
     var $iv = $.iviewer;
     
     $iv.fn = $iv.prototype = {
-        iviewer : "0.4"
+        iviewer : "0.4.1"
     }
     $iv.fn.extend = $iv.extend = $.extend;
     
     $iv.fn.extend({
+
+        loadImage: function(src)
+        {
+            this.current_zoom = this.settings.zoom;
+            var me = this;
+
+            this.img_object.object.unbind('load').
+                removeAttr("src").
+                removeAttr("width").
+                removeAttr("height").
+                load(function(){
+                me.img_object.display_width = me.img_object.orig_width = this.width;
+                me.img_object.display_height = me.img_object.orig_height = this.height;
+                       
+                if(!me.container.hasClass("iviewer_cursor")){
+                    me.container.addClass("iviewer_cursor");
+                }
+
+                if(me.settings.zoom == "fit"){
+                    me.fit();
+                }
+                else {
+                    me.set_zoom(me.settings.zoom);
+                }
+                //src attribute is after setting load event, or it won't work
+            }).attr("src",src);
+        },
                   
         /**
         * fits image in the container
