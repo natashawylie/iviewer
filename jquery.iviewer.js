@@ -4,7 +4,7 @@
     {
         return this.each(function()
                         {
-                            new $iv(this,o);
+						   $(this).data('viewer', new $iv(this,o));
                         });
     }
     
@@ -167,6 +167,7 @@
                 removeAttr("src").
                 removeAttr("width").
                 removeAttr("height").
+				css({ top: 0, left: 0 }).
                 load(function(){
                 me.img_object.display_width = me.img_object.orig_width = this.width;
                 me.img_object.display_height = me.img_object.orig_height = this.height;
