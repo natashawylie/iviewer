@@ -161,7 +161,7 @@
     var $iv = $.iviewer;
     
     $iv.fn = $iv.prototype = {
-        iviewer : "0.4.1"
+        iviewer : "0.4.2"
     }
     $iv.fn.extend = $iv.extend = $.extend;
     
@@ -184,25 +184,25 @@
                 removeAttr("height").
 				css({ top: 0, left: 0 }).
                 load(function(){
-                me.image_loaded = true;
-                me.img_object.display_width = me.img_object.orig_width = this.width;
-                me.img_object.display_height = me.img_object.orig_height = this.height;
-                       
-                if(!me.container.hasClass("iviewer_cursor")){
-                    me.container.addClass("iviewer_cursor");
-                }
-
-                if(me.settings.zoom == "fit"){
-                    me.fit();
-                }
-                else {
-                    me.set_zoom(me.settings.zoom);
-                }
-                
-                if(this.settings.onFinishLoad)
-                {
-                   this.settings.onFinishLoad.call(this);
-                }
+                    me.image_loaded = true;
+                    me.img_object.display_width = me.img_object.orig_width = this.width;
+                    me.img_object.display_height = me.img_object.orig_height = this.height;
+                           
+                    if(!me.container.hasClass("iviewer_cursor")){
+                        me.container.addClass("iviewer_cursor");
+                    }
+    
+                    if(me.settings.zoom == "fit"){
+                        me.fit();
+                    }
+                    else {
+                        me.set_zoom(me.settings.zoom);
+                    }
+                    
+                    if(me.settings.onFinishLoad)
+                    {
+                       me.settings.onFinishLoad.call(me);
+                    }
                 
                 //src attribute is after setting load event, or it won't work
             }).attr("src",src);
@@ -372,10 +372,19 @@
                 new_zoom = this.settings.zoom_max;
             }
 
-            var old_x = -parseInt(this.img_object.object.css("left"),10) +
-                                        Math.round(this.settings.width/2);
-            var old_y = -parseInt(this.img_object.object.css("top"),10) + 
-                                        Math.round(this.settings.height/2);
+            /* we fake these values to make fit zoom properly work */
+            if(this.current_zoom == "fit")
+            {
+                var old_x = Math.round(this.settings.width/2 + this.img_object.orig_width/2);
+                var old_y = Math.round(this.settings.height/2 + this.img_object.orig_height/2);
+                this.current_zoom = 100;
+            }
+            else {
+                var old_x = -parseInt(this.img_object.object.css("left"),10) +
+                                            Math.round(this.settings.width/2);
+                var old_y = -parseInt(this.img_object.object.css("top"),10) + 
+                                            Math.round(this.settings.height/2);
+            }
 
             var new_width = $iv.scaleValue(this.img_object.orig_width, new_zoom);
             var new_height = $iv.scaleValue(this.img_object.orig_height, new_zoom);
