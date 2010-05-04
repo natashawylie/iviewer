@@ -167,7 +167,7 @@
     
     $iv.fn.extend({
 
-        loadImage: function(src)
+        loadImage: function(src, replace_zoom)
         {
             this.current_zoom = this.settings.zoom;
             this.image_loaded = false;
@@ -192,11 +192,17 @@
                         me.container.addClass("iviewer_cursor");
                     }
     
-                    if(me.settings.zoom == "fit"){
-                        me.fit();
+                    if(replace_zoom)
+                    {
+                        me.set_zoom(replace_zoom);
                     }
                     else {
-                        me.set_zoom(me.settings.zoom);
+                        if(me.settings.zoom == "fit"){
+                            me.fit();
+                        }
+                        else {
+                            me.set_zoom(me.settings.zoom);
+                        }
                     }
                     
                     if(me.settings.onFinishLoad)
