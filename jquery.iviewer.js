@@ -85,6 +85,7 @@
         this.img_object = {};
 
         this.zoom_object = {}; //object to show zoom status
+        this.image_loaded = false;
         
         //drag variables
         this.dx = 0; 
@@ -161,6 +162,7 @@
         loadImage: function(src)
         {
             this.current_zoom = this.settings.zoom;
+            this.image_loaded = false;
             var me = this;
 
             this.img_object.object.unbind('load').
@@ -169,6 +171,7 @@
                 removeAttr("height").
 				css({ top: 0, left: 0 }).
                 load(function(){
+                me.image_loaded = true;
                 me.img_object.display_width = me.img_object.orig_width = this.width;
                 me.img_object.display_height = me.img_object.orig_height = this.height;
                        
@@ -236,6 +239,12 @@
         **/
         setCoords: function(x,y)
         {
+            //do nothing while image is being loaded
+            if(!this.image_loaded)
+            {
+                return;
+            }
+            
             //check new coordinates to be correct (to be in rect)
             if(y > 0){
                 y = 0;
@@ -325,6 +334,12 @@
         set_zoom: function(new_zoom)
         {
             if(this.settings.onZoom && this.settings.onZoom.call(this, new_zoom) == false)
+            {
+                return;
+            }
+            
+            //do nothing while image is being loaded
+            if(!this.image_loaded)
             {
                 return;
             }
