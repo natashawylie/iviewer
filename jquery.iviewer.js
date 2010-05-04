@@ -70,7 +70,15 @@
         * mouse click event
         * @param object coords mouse coordinates on the image
         **/
-        onClick: null
+        onClick: null,
+        /**
+        * event is fired when image starts to load
+        */
+        onStartLoad: null,
+        /**
+        * event is fired, when image is loaded and initially positioned
+        */
+        onFinishLoad: null
     };
     
     $.iviewer = function(e,o)
@@ -164,6 +172,11 @@
             this.current_zoom = this.settings.zoom;
             this.image_loaded = false;
             var me = this;
+            
+            if(this.settings.onStartLoad)
+            {
+               this.settings.onStartLoad.call(this);
+            }
 
             this.img_object.object.unbind('load').
                 removeAttr("src").
@@ -185,6 +198,12 @@
                 else {
                     me.set_zoom(me.settings.zoom);
                 }
+                
+                if(this.settings.onFinishLoad)
+                {
+                   this.settings.onFinishLoad.call(this);
+                }
+                
                 //src attribute is after setting load event, or it won't work
             }).attr("src",src);
         },
