@@ -4,7 +4,7 @@
     {
         return this.each(function()
                         {
-						   $(this).data('viewer', new $iv(this,o));
+                            $(this).data('viewer', new $iv(this,o));
                         });
     }
     
@@ -182,7 +182,7 @@
                 removeAttr("src").
                 removeAttr("width").
                 removeAttr("height").
-				css({ top: 0, left: 0 }).
+                css({ top: 0, left: 0 }).
                 load(function(){
                     me.image_loaded = true;
                     me.img_object.display_width = me.img_object.orig_width = this.width;
@@ -402,6 +402,8 @@
             this.setCoords(new_x, new_y);
 
             this.current_zoom = new_zoom;
+
+            $.isFunction( this.settings.onAfterZoom ) && this.settings.onAfterZoom.call( this, new_zoom );
             this.update_status();
         },
         
