@@ -1,3 +1,17 @@
+/*
+ * iviewer Plugin for jQuery JavaScript Library
+ * https://github.com/can3p/iviewer
+ *
+ * Copyright (c) 2009 - 2011 Dmitry Petrov
+ * Dual licensed under the MIT and GPL licenses.
+ *  - http://www.opensource.org/licenses/mit-license.php
+ *  - http://www.gnu.org/copyleft/gpl.html
+ *
+ * Author: Dmitry Petrov
+ * Version: dev
+ * Date:
+ */
+
 (function($){
     
     $.fn.iviewer  = function(o)
@@ -161,7 +175,7 @@
     var $iv = $.iviewer;
     
     $iv.fn = $iv.prototype = {
-        iviewer : "0.4.2"
+        iviewer : "dev"
     }
     $iv.fn.extend = $iv.extend = $.extend;
     
