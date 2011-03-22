@@ -92,6 +92,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     _create: function() {
         var me = this;
 
+        //drag variables
+        this.dx = 0;
+        this.dy = 0;
+        this.dragged = false;
+
         /* object containing actual information about image
         *   @img_object.object - jquery img object
         *   @img_object.orig_{width|height} - original dimensions
@@ -128,14 +133,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         //init object
         this.img_object.object = $("<img>").
-            css({ position: "absolute", top :"0px", left: "0px"});//. //this is needed, because chromium sets them auto otherwise
+            css({ position: "absolute", top :"0px", left: "0px"}). //this is needed, because chromium sets them auto otherwise
         //bind mouse events
-        /*
-        mousedown(function(e){ return me.drag_start(e); }).
-        mousemove(function(e){return me.drag(e)}).
-        mouseup(function(e){return me.drag_end(e)}).
         click(function(e){return me.click(e)}).
-        mouseleave(function(e){return me.drag_end(e)}).
         mousewheel(function(ev, delta)
         {
             //this event is there instead of containing div, because
@@ -144,7 +144,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             me.zoom_by(zoom);
             return false;
         });
-        */
 
         this.img_object.object.prependTo(me.container);
         this.loadImage(this.options.src);
@@ -158,6 +157,12 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         {
             this.options.initCallback.call(this);
         }
+
+        this._mouseInit();
+    },
+
+    destroy: function() {
+        this._mouseDestroy();
     },
 
     _updateContainerInfo: function()
@@ -476,7 +481,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     /**
     *   callback for handling mousdown event to start dragging image
     **/
-    drag_start: function(e)
+    _mouseStart: function(e)
     {
         if(this.options.onStartDrag &&
            this.options.onStartDrag.call(this,this.getMouseCoords(e)) == false)
@@ -490,13 +495,17 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this.dx = e.pageX - this.img_object.x;
         this.dy = e.pageY - this.img_object.y;
-        return false;
+        return true;
+    },
+
+    _mouseCapture: function( e ) {
+        return true;
     },
 
     /**
     *   callback for handling mousmove event to drag image
     **/
-    drag: function(e)
+    _mouseDrag: function(e)
     {
         this.options.onMouseMove &&
                 this.options.onMouseMove.call(this,this.getMouseCoords(e));
@@ -516,7 +525,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     /**
     *   callback for handling stop drag
     **/
-    drag_end: function(e)
+    _mouseStop: function(e)
     {
         this.container.removeClass("iviewer_drag_cursor");
         this.dragged=false;
