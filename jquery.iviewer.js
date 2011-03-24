@@ -268,6 +268,17 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             return;
         }
 
+        $.extend( this.img_object, this._correctCoords( x, y ) );
+
+        this.img_object.x = x;
+        this.img_object.y = y;
+
+        this.img_object.object.css("top",y + "px")
+                         .css("left",x + "px");
+    },
+
+    _correctCoords: function( x, y )
+    {
         //check new coordinates to be correct (to be in rect)
         if(y > 0){
             y = 0;
@@ -288,11 +299,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             y = -(this.img_object.display_height - this.options.height)/2;
         }
 
-        this.img_object.x = x;
-        this.img_object.y = y;
-
-        this.img_object.object.css("top",y + "px")
-                         .css("left",x + "px");
+        return { x: x, y:y };
     },
 
 
@@ -398,12 +405,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         new_x = this.options.width/2 - new_x;
         new_y = this.options.height/2 - new_y;
 
-        this.img_object.object.attr("width",new_width)
-                         .attr("height",new_height);
+        //this.img_object.object.attr("width",new_width)
+                         //.attr("height",new_height);
         this.img_object.display_width = new_width;
         this.img_object.display_height = new_height;
 
-        this.setCoords(new_x, new_y);
+        $.extend( this.img_object, this._correctCoords( new_x, new_y ) );
+        this.img_object.object.animate( { width: new_width, height: new_height, top: this.img_object.y, left: this.img_object.x }, 200 );
 
         this.current_zoom = new_zoom;
 
