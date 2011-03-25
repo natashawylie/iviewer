@@ -1,10 +1,17 @@
 PROJECT=jquery.iviewer
-VERSION=0.4.2
+VERSION=dev
 BUNDLE_NAME=${PROJECT}-${VERSION}
 
 #send all commits to the master repository
 push:
 	git push origin master
+
+min:
+	rm -f jquery.iviewer.min.js
+	googlecc --js jquery.iviewer.js --js_output_file jquery.iviewer.min.tmp.js
+	sed -n '/^\/\*/,/\*\// p' jquery.iviewer.js > jquery.iviewer.min.js
+	cat jquery.iviewer.min.tmp.js >> jquery.iviewer.min.js
+	rm -f jquery.iviewer.min.tmp.js
 
 bundle:
 	mkdir ${BUNDLE_NAME}

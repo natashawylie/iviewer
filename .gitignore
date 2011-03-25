@@ -1,0 +1,4 @@
+*.swp
+logs
+public/photos
+public/phtmp
