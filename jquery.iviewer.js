@@ -268,13 +268,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             return;
         }
 
+
         $.extend( this.img_object, this._correctCoords( x, y ) );
 
-        this.img_object.x = x;
-        this.img_object.y = y;
-
-        this.img_object.object.css("top",y + "px")
-                         .css("left",x + "px");
+        this.img_object.object.css("top",this.img_object.y + "px")
+                         .css("left",this.img_object.x + "px");
     },
 
     _correctCoords: function( x, y )
@@ -405,8 +403,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         new_x = this.options.width/2 - new_x;
         new_y = this.options.height/2 - new_y;
 
-        //this.img_object.object.attr("width",new_width)
-                         //.attr("height",new_height);
         this.img_object.display_width = new_width;
         this.img_object.display_height = new_height;
 
@@ -489,7 +485,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     /**
     *   callback for handling mousdown event to start dragging image
     **/
-    _mouseStart: function(e)
+    _mouseStart: function( e )
     {
         if(this.options.onStartDrag &&
            this.options.onStartDrag.call(this,this.getMouseCoords(e)) == false)
