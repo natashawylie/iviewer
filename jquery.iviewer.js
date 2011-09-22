@@ -186,7 +186,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             removeAttr("src").
             removeAttr("width").
             removeAttr("height").
-            css({ top: 0, left: 0 }).
+            css({ top: 0, left: 0, width: '', height: '' }).
             load(function(){
                 me.image_loaded = true;
                 me.img_object.display_width = me.img_object.orig_width = this.width;
