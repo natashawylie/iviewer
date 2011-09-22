@@ -7,11 +7,11 @@
 }
 
 .iviewer_cursor {
-    cursor: -moz-grab;
+    cursor: url(img/hand.cur) 6 8, pointer;
 }
 
 .iviewer_drag_cursor {
-    cursor: -moz-grabbing;
+    cursor: url(img/grab.cur) 6 8, pointer;
 }
 
 .iviewer_button {
