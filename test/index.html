@@ -5,43 +5,34 @@
         <title>jquery.iviewer test</title>
         <script type="text/javascript" src="jquery.js" ></script>
         <script type="text/javascript" src="jqueryui.js" ></script>
-        <!-- <script type="text/javascript" src="jquery.mousewheel.min.js" ></script> -->
+        <script type="text/javascript" src="jquery.mousewheel.min.js" ></script>
         <script type="text/javascript" src="../jquery.iviewer.js" ></script>
         <script type="text/javascript">
             var $ = jQuery;
             $(document).ready(function(){
-                  $("#viewer").iviewer(
-                       {
+                  var iv1 = $("#viewer").iviewer({
                        src: "test_image.jpg", 
                        update_on_resize: false,
-                       initCallback: function ()
-                       {
-                           var object = this;
-                           $("#in").click(function(){ object.zoom_by(1);}); 
-                           $("#out").click(function(){ object.zoom_by(-1);}); 
-                           $("#fit").click(function(){ object.fit();}); 
-                           $("#orig").click(function(){  object.set_zoom(100); }); 
-                           $("#update").click(function(){ object.update_container_info();});
-                       },
-                       onMouseMove: function(object, coords) { },
-                       onStartDrag: function(object, coords) { return false; }, //this image will not be dragged
-                       onDrag: function(object, coords) { }
+                       onMouseMove: function(coords) { },
+                       onStartDrag: function(coords) { return false; }, //this image will not be dragged
+                       onDrag: function(coords) { }
                   });
 
+                   $("#in").click(function(){ iv1.iviewer('zoom_by', 1); }); 
+                   $("#out").click(function(){ iv1.iviewer('zoom_by', -1); }); 
+                   $("#fit").click(function(){ iv1.iviewer('fit'); }); 
+                   $("#orig").click(function(){ iv1.iviewer('set_zoom', 100); }); 
+                   $("#update").click(function(){ iv1.iviewer('update_container_info'); });
 
-                  var iviewer = {};
+                  var iv2 = {};
                   $("#viewer2").iviewer(
                   {
-                      src: "test_image2.jpg",
-                      initCallback: function()
-                      {
-                        iviewer = this;
-                      }
+                      src: "test_image2.jpg"
                   });
 
                   $("#chimg").click(function()
                   {
-                    iviewer.loadImage("test_image.jpg");
+                    iv2.iviewer('loadImage', "test_image.jpg");
                     return false;
                   });
             });

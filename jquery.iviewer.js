@@ -55,10 +55,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         **/
         onZoom: null,
         /**
-        * callback is fired after plugin setup
-        **/
-        initCallback: null,
-        /**
         * event is fired on drag begin
         * @param object coords mouse coordinates on the image
         * @return boolean if false is returned, drag action is aborted
@@ -151,11 +147,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         if(!this.options.ui_disabled)
         {
             this.createui();
-        }
-
-        if(this.options.initCallback)
-        {
-            this.options.initCallback.call(this);
         }
 
         this._mouseInit();
