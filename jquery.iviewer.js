@@ -251,8 +251,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         var dx = x-Math.round(this.options.width/2);
         var dy = y-Math.round(this.options.height/2);
 
-        var new_x = this.img_object.x - this.dx;
-        var new_y = this.img_object.y - this.dy;
+        var new_x = this.img_object.x - dx;
+        var new_y = this.img_object.y - dy;
 
         this.setCoords(new_x, new_y);
     },
