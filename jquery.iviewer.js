@@ -268,8 +268,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
     _correctCoords: function( x, y )
     {
-        x = x >>> 0;
-        y = y >>> 0; //assure that x and y are valid integers
+        x = parseInt(x, 10);
+        y = parseInt(y, 10);
 
         //check new coordinates to be correct (to be in rect)
         if(y > 0){
