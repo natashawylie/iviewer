@@ -3,63 +3,67 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <title>jquery.iviewer test</title>
-        <!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" ></script>-->
         <script type="text/javascript" src="jquery.js" ></script>
+        <script type="text/javascript" src="jqueryui.js" ></script>
         <script type="text/javascript" src="jquery.mousewheel.min.js" ></script>
         <script type="text/javascript" src="../jquery.iviewer.js" ></script>
         <script type="text/javascript">
-            var $ = jQuery;
-            function isInCircle(x, y) {
-                var relative_x = x - this.x;
-                var relative_y = y - this.y;
-                return Math.sqrt(relative_x*relative_x + relative_y*relative_y) <= this.r;
-            }
-            
-            function isInRectangle(x, y) {
-                return (this.x1 <= x && x <= this.x2) && (this.y1 <= y && y<= this.y2);
-            }
-            
-            function getCircleCenter() { return {x: this.x, y: this.y}; }
-            
-            function getRectangleCenter() { return {x: (this.x2+this.x1)/2, y: (this.y2+this.y1)/2}; }
-        
-            var objects = [
-                {x: 100, y: 100, r: 50, isInObject: isInCircle, title: 'big circle', getCenter: getCircleCenter },
-                {x: 150, y: 250, r: 35, isInObject: isInCircle, title: 'middle circle', getCenter: getCircleCenter },
-                {x: 500, y: 300, r: 10, isInObject: isInCircle, title: 'small circle', getCenter: getCircleCenter },
-                {x1: 200, y1: 400, x2: 300, y2: 500, isInObject: isInRectangle, title: 'rectangle', getCenter: getRectangleCenter }
-            ]
-            
-            function whereIam(x, y) {
-                for (var i=0; i<objects.length; i++) {
-                    var obj = objects[i];
-                    if (obj.isInObject(x, y))
-                        return obj;
+            jQuery(function($){
+
+                var viewer;
+
+                function isInCircle(x, y) {
+                    var relative_x = x - this.x;
+                    var relative_y = y - this.y;
+                    return Math.sqrt(relative_x*relative_x + relative_y*relative_y) <= this.r;
                 }
-                    
-                return null;
-            }
+                
+                function isInRectangle(x, y) {
+                    return (this.x1 <= x && x <= this.x2) && (this.y1 <= y && y<= this.y2);
+                }
+                
+                function getCircleCenter() { return {x: this.x, y: this.y}; }
+                
+                function getRectangleCenter() { return {x: (this.x2+this.x1)/2, y: (this.y2+this.y1)/2}; }
             
-            function showMe(a) {
-                $.each(objects, function(i, object) {
-                    if (object.title == $(a).html()) {
-                        $("#viewer1").each(function(){
+                var objects = [
+                    {x: 100, y: 100, r: 50, isInObject: isInCircle, title: 'big circle', getCenter: getCircleCenter },
+                    {x: 150, y: 250, r: 35, isInObject: isInCircle, title: 'middle circle', getCenter: getCircleCenter },
+                    {x: 500, y: 300, r: 10, isInObject: isInCircle, title: 'small circle', getCenter: getCircleCenter },
+                    {x1: 200, y1: 400, x2: 300, y2: 500, isInObject: isInRectangle, title: 'rectangle', getCenter: getRectangleCenter }
+                ]
+                
+                function whereIam(x, y) {
+                    for (var i=0; i<objects.length; i++) {
+                        var obj = objects[i];
+                        if (obj.isInObject(x, y))
+                            return obj;
+                    }
+                        
+                    return null;
+                }
+                
+                function showMe(ev, a) {
+                    $.each(objects, function(i, object) {
+                        if (object.title == $(a).html()) {
                             var center = object.getCenter();
-                            var offset = this.iviewer.imageToContainer(center.x, center.y);
-                            var containerOffset = this.iviewer.container.offset();
+                            var offset = viewer.iviewer('imageToContainer', center.x, center.y);
+                            var containerOffset = viewer.iviewer('getContainerOffset');
                             var pointer = $('#pointer');
                             offset.x += containerOffset.left - 20;
                             offset.y += containerOffset.top - 40;
                             pointer.css('display', 'block');
                             pointer.css('left', offset.x+'px');
                             pointer.css('top', offset.y+'px');
-                        });
-                    }                    
-                });
-            }
+                        }                    
+                    });
+
+                    ev.preventDefault();
+                }
+
+                window.showMe = showMe;
         
-            $(function(){
-                $("#viewer1").iviewer({
+                viewer = $("#viewer1").iviewer({
                     src: "test_active_with_objects.GIF",
 
                     onClick: function(coords) {
@@ -154,10 +158,10 @@
     <body>
         <div class="toolbar">
             <span id="status"></span>|Show me:
-            <a href="#" onclick="showMe(this)">big circle</a>, 
-            <a href="#" onclick="showMe(this)">middle circle</a>,
-            <a href="#" onclick="showMe(this)">small circle</a>,
-            <a href="#" onclick="showMe(this)">rectangle</a>
+            <a href="#" onclick="showMe(event, this)">big circle</a>, 
+            <a href="#" onclick="showMe(event, this)">middle circle</a>,
+            <a href="#" onclick="showMe(event, this)">small circle</a>,
+            <a href="#" onclick="showMe(event, this)">rectangle</a>
         </div>
             
         <div class="wrapper">

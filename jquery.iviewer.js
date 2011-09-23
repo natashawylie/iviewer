@@ -249,6 +249,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     /**
+     * Get container offst object.
+     */
+    getContainerOffset: function() {
+        return jQuery.extend({}, this.container.offset());
+    },
+
+    /**
     * set coordinates of upper left corner of image object
     **/
     setCoords: function(x,y)
