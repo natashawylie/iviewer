@@ -249,7 +249,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     /**
-     * Get container offst object.
+     * Get container offset object.
      */
     getContainerOffset: function() {
         return jQuery.extend({}, this.container.offset());
