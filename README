@@ -1,10 +1,16 @@
-Jquery.iviewer plugin allows to view image in selected div with zoom controls and
-possibility to move image in area by mouse. 
+jQuery.iviewer is an jQuery UI widget responsible for image view control with zoom
+control and a possibility to move image in area by the mouse.
 
-For zooming with mousewheel requires jquery.mousewheel plugin avalible at
-http://github.com/brandonaaron/jquery-mousewheel/tree/master
+Widget depends on the jquery.ui.core, jquery.ui.widget and jquery.ui.mouse.
 
-Plugin is dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+Features:
+ * Total control over the widget through API.
+ * Controls can be customized with CSS.
+ * Smooth zoom.
+
+ Support: widget is expected to work in ie6+, ff2+, google chrome, opera 9+, safari.
+
+Widget is dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
 and GPL (http://www.opensource.org/licenses/gpl-license.php) licenses.
 
 
