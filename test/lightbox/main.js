@@ -4,7 +4,7 @@
 
         $("#iviewer").fadeIn().trigger('fadein');
 
-        $("#iviewer .viewer").
+        var viewer = $("#iviewer .viewer").
             width($(window).width() - 80).
             height($(window).height()).
             iviewer({
@@ -14,15 +14,6 @@
                 initCallback : function() {
                     var self = this;
 
-                    $("#iviewer .zoomin").click(function(e) {
-                        e.preventDefault();
-                        self.zoom_by(1);
-                    });
-
-                    $("#iviewer .zoomout").click(function(e) {
-                        e.preventDefault();
-                        self.zoom_by(-1);
-                    });
                 },
                 onZoom : function() {
                     if (!firstZoom) return;
@@ -33,6 +24,16 @@
                 }
             }
         );
+
+        $("#iviewer .zoomin").click(function(e) {
+            e.preventDefault();
+            viewer.iviewer('zoom_by', 1);
+        });
+
+        $("#iviewer .zoomout").click(function(e) {
+            e.preventDefault();
+            viewer.iviewer('zoom_by', -1);
+        });
     }
 
     function close() {
