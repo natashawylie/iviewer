@@ -13,6 +13,65 @@
 
 ( function( $, undefined ) {
 
+//this code was taken from the https://github.com/furf/jquery-ui-touch-punch
+var mouseEvents = {
+    touchstart: 'mousedown',
+    touchmove: 'mousemove',
+    touchend: 'mouseup'
+};
+
+/**
+ * Convert a touch event to a mouse-like
+ */
+function makeMouseEvent (event) {
+    var touch = event.originalEvent.changedTouches[0];
+
+    return $.extend(event, {
+        type:        mouseEvents[event.type],
+        which:     1,
+        pageX:     touch.pageX,
+        pageY:     touch.pageY,
+        screenX: touch.screenX,
+        screenY: touch.screenY,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        isTouchEvent: true
+    });
+}
+
+var mouseProto = $.ui.mouse.prototype,
+    _mouseInit = $.ui.mouse.prototype._mouseInit;
+
+mouseProto._mouseInit = function() {
+    var self = this;
+    self._touchActive = false;
+
+    this.element.bind( 'touchstart.' + this.widgetName, function(event) {
+        self._touchActive = true;
+        return self._mouseDown(makeMouseEvent(event));
+    })
+
+    var self = this;
+    // these delegates are required to keep context
+    this._mouseMoveDelegate = function(event) {
+        if (self._touchActive) {
+            return self._mouseMove(makeMouseEvent(event));
+        }
+    };
+    this._mouseUpDelegate = function(event) {
+        if (self._touchActive) {
+            self._touchActive = false;
+            return self._mouseUp(makeMouseEvent(event));
+        }
+    };
+
+    $(document)
+        .bind('touchmove.'+ this.widgetName, this._mouseMoveDelegate)
+        .bind('touchend.' + this.widgetName, this._mouseUpDelegate);
+
+    _mouseInit.apply(this);
+}
+
 $.widget( "ui.iviewer", $.ui.mouse, {
     widgetEventPrefix: "iviewer",
     options : {
@@ -518,8 +577,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             this.options.onDrag &&
                     this.options.onDrag.call(this,this.getMouseCoords(e));
 
-            var ltop =  e.pageY -this.dy;
-            var lleft = e.pageX -this.dx;
+            var ltop =  e.pageY - this.dy;
+            var lleft = e.pageX - this.dx;
 
             this.setCoords(lleft, ltop);
             return false;
@@ -550,19 +609,19 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         $("<div>").addClass("iviewer_zoom_in").addClass("iviewer_common").
         addClass("iviewer_button").
-        mousedown(function(){me.zoom_by(1); return false;}).appendTo(this.container);
+        bind('mousedown touchstart',function(){me.zoom_by(1); return false;}).appendTo(this.container);
 
         $("<div>").addClass("iviewer_zoom_out").addClass("iviewer_common").
         addClass("iviewer_button").
-        mousedown(function(){me.zoom_by(- 1); return false;}).appendTo(this.container);
+        bind('mousedown touchstart',function(){me.zoom_by(- 1); return false;}).appendTo(this.container);
 
         $("<div>").addClass("iviewer_zoom_zero").addClass("iviewer_common").
         addClass("iviewer_button").
-        mousedown(function(){me.set_zoom(100); return false;}).appendTo(this.container);
+        bind('mousedown touchstart',function(){me.set_zoom(100); return false;}).appendTo(this.container);
 
         $("<div>").addClass("iviewer_zoom_fit").addClass("iviewer_common").
         addClass("iviewer_button").
-        mousedown(function(){me.fit(this); return false;}).appendTo(this.container);
+        bind('mousedown touchstart',function(){me.fit(this); return false;}).appendTo(this.container);
 
         this.zoom_object = $("<div>").addClass("iviewer_zoom_status").addClass("iviewer_common").
         appendTo(this.container);
