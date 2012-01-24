@@ -8,7 +8,7 @@
  *  - http://www.gnu.org/copyleft/gpl.html
  *
  * Author: Dmitry Petrov
- * Version: 0.5.2
+ * Version: 0.5.3
  */
 
 ( function( $, undefined ) {
@@ -97,6 +97,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         * zoom is calculated by formula: zoom_base * zoom_delta^rate
         **/
         zoom_delta: 1.4,
+        /**
+        * whether the zoom should be animated.
+        */
+        zoom_animation: true,
         /**
         * if true plugin doesn't add its own controls
         **/
@@ -466,7 +470,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.img_object.display_height = new_height;
 
         $.extend( this.img_object, this._correctCoords( new_x, new_y ) );
-        this.img_object.object.animate( { width: new_width, height: new_height, top: this.img_object.y, left: this.img_object.x }, 200 );
+        if (this.options.zoom_animation) {
+            this.img_object.object.animate( { width: new_width, height: new_height, top: this.img_object.y, left: this.img_object.x }, 200 );
+        } else {
+            this.img_object.object.css( { width: new_width, height: new_height, top: this.img_object.y, left: this.img_object.x });
+        }
 
         this.current_zoom = new_zoom;
 
