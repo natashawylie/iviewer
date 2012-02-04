@@ -72,6 +72,90 @@ mouseProto._mouseInit = function() {
     _mouseInit.apply(this);
 }
 
+var setter = function(setter, getter) {
+    return function(val) {
+        if (arguments.length === 0) {
+            return getter.apply(this);
+        } else {
+            setter.call(this, val);
+        }
+    }
+};
+
+var ImageObject = function(img) {
+    this._img = img;
+    this.x(0)
+    this.y(0)
+    this.angle(0);
+};
+
+(function() {
+    this.reset = function(w, h) {
+        this._angle = 0;
+        this._swapDimensions = false;
+        this.x(0)
+        this.y(0)
+
+        this.orig_width(w);
+        this.orig_height(h);
+        this.display_width(w);
+        this.display_height(h);
+    };
+
+    this._dimension = function(prefix, name) {
+        var horiz = '_' + prefix + '_' + name,
+            vert = '_' + prefix + '_' + (name === 'height' ? 'width' : 'height');
+        return setter(function(val) {
+                this[this._swapDimensions ? horiz: vert] = val;
+            },
+            function() {
+                return this[this._swapDimensions ? horiz: vert];
+            });
+    };
+
+    this.display_width = this._dimension('display', 'width'),
+    this.display_height = this._dimension('display', 'height'),
+    this.display_diff = function() { return Math.floor( this.display_width() - this.display_height() ) };
+    this.orig_width = this._dimension('orig', 'width'),
+    this.orig_height = this._dimension('orig', 'height'),
+
+    this.x = setter(function(val) { 
+            this._x = val;
+            this._img.css("left",this._x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
+        },
+        function() {
+            return this._x;
+        });
+
+    this.y = setter(function(val) {
+            this._y = val;
+            this._img.css("top",this._y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
+        },
+       function() {
+            return this._y;
+       });
+
+    this.angle = setter(function(deg) {
+            this._angle = deg;
+            this._swapDimensions = deg % 180 !== 0;
+
+            var cssVal = 'rotate(' + deg + 'deg)',
+                img = this._img;
+
+            jQuery.each(['', '-webkit-', '-moz-', '-o-', '-ms-'], function(i, prefix) {
+                img.css(prefix + 'transform', cssVal);
+            });
+        },
+       function() { return this._angle; });
+
+    this.imgOffset = setter(jQuery.noop,
+                           function() { return this._img.offset(); });
+
+    this.object = setter(jQuery.noop,
+                           function() { return this._img; });
+
+}).apply(ImageObject.prototype);
+
 $.widget( "ui.iviewer", $.ui.mouse, {
     widgetEventPrefix: "iviewer",
     options : {
@@ -161,6 +245,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         *   @img_object.display_{width|height} - actual dimensions
         */
         this.img_object = {};
+        this.img_object
 
         this.zoom_object = {}; //object to show zoom status
         this.image_loaded = false;
@@ -188,11 +273,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             });
         }
 
-        this.img_object.x = 0;
-        this.img_object.y = 0;
-
         //init object
-        this.img_object.object = $("<img>").
+        var img = $("<img>").
             css({ position: "absolute", top :"0px", left: "0px"}). //this is needed, because chromium sets them auto otherwise
         //bind mouse events
         click(function(e){return me.click(e)}).
@@ -205,7 +287,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             return false;
         });
 
-        this.img_object.object.prependTo(me.container);
+        img.prependTo(me.container);
+        this.img_object = new ImageObject(img);
+
         this.loadImage(this.options.src);
 
         if(!this.options.ui_disabled)
@@ -229,7 +313,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     loadImage: function( src )
     {
         this.current_zoom = this.options.zoom;
-        this._angle = 0;
         this.image_loaded = false;
         var me = this;
 
@@ -238,15 +321,15 @@ $.widget( "ui.iviewer", $.ui.mouse, {
            this.options.onStartLoad.call(this);
         }
 
-        this.img_object.object.unbind('load').
+        this.img_object.object().unbind('load').
             removeAttr("src").
             removeAttr("width").
             removeAttr("height").
-            css({ top: 0, left: 0, width: '', height: '' }).
+            removeAttr("style").
+            css({ position: "absolute", top :"0px", left: "0px"}).
             load(function(){
                 me.image_loaded = true;
-                me.img_object.display_width = me.img_object.orig_width = this.width;
-                me.img_object.display_height = me.img_object.orig_height = this.height;
+                me.img_object.reset(this.width, this.height);
 
                 if(!me.container.hasClass("iviewer_cursor")){
                     me.container.addClass("iviewer_cursor");
@@ -273,16 +356,16 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     fit: function()
     {
-        var aspect_ratio = this.img_object.orig_width / this.img_object.orig_height;
+        var aspect_ratio = this.img_object.orig_width() / this.img_object.orig_height();
         var window_ratio = this.options.width /  this.options.height;
         var choose_left = (aspect_ratio > window_ratio);
         var new_zoom = 0;
 
         if(choose_left){
-            new_zoom = this.options.width / this.img_object.orig_width * 100;
+            new_zoom = this.options.width / this.img_object.orig_width() * 100;
         }
         else {
-            new_zoom = this.options.height / this.img_object.orig_height * 100;
+            new_zoom = this.options.height / this.img_object.orig_height() * 100;
         }
 
       this.set_zoom(new_zoom);
@@ -293,8 +376,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     center: function()
     {
-        this.setCoords(-Math.round((this.img_object.display_height - this.options.height)/2),
-                       -Math.round((this.img_object.display_width - this.options.width)/2));
+        this.setCoords(-Math.round((this.img_object.display_height() - this.options.height)/2),
+                       -Math.round((this.img_object.display_width() - this.options.width)/2));
     },
 
     /**
@@ -307,8 +390,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         var dx = x-Math.round(this.options.width/2);
         var dy = y-Math.round(this.options.height/2);
 
-        var new_x = this.img_object.x - dx;
-        var new_y = this.img_object.y - dy;
+        var new_x = this.img_object().x - dx;
+        var new_y = this.img_object().y - dy;
 
         this.setCoords(new_x, new_y);
     },
@@ -331,11 +414,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             return;
         }
 
-
-        $.extend( this.img_object, this._correctCoords( x, y ) );
-
-        this.img_object.object.css("top",this.img_object.y + "px")
-                         .css("left",this.img_object.x + "px");
+        var coords = this._correctCoords(x,y);
+        this.img_object.x(coords.x);
+        this.img_object.y(coords.y);
     },
 
     _correctCoords: function( x, y )
@@ -350,17 +431,17 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         if(x > 0){
             x = 0;
         }
-        if(y + this.img_object.display_height < this.options.height){
-            y = this.options.height - this.img_object.display_height;
+        if(y + this.img_object.display_height() < this.options.height){
+            y = this.options.height - this.img_object.display_height();
         }
-        if(x + this.img_object.display_width < this.options.width){
-            x = this.options.width - this.img_object.display_width;
+        if(x + this.img_object.display_width() < this.options.width){
+            x = this.options.width - this.img_object.display_width();
         }
-        if(this.img_object.display_width <= this.options.width){
-            x = -(this.img_object.display_width - this.options.width)/2;
+        if(this.img_object.display_width() <= this.options.width){
+            x = -(this.img_object.display_width() - this.options.width)/2;
         }
-        if(this.img_object.display_height <= this.options.height){
-            y = -(this.img_object.display_height - this.options.height)/2;
+        if(this.img_object.display_height() <= this.options.height){
+            y = -(this.img_object.display_height() - this.options.height)/2;
         }
 
         return { x: x, y:y };
@@ -375,15 +456,15 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     containerToImage : function (x,y)
     {
-        if(x < this.img_object.x || y < this.img_object.y ||
-           x > this.img_object.x + this.img_object.display_width ||
-           y > this.img_object.y + this.img_object.display_height)
+        if(x < this.img_object.x() || y < this.img_object.y() ||
+           x > this.img_object.x() + this.img_object.display_width() ||
+           y > this.img_object.y() + this.img_object.display_height())
         {
             return false;
         }
 
-        return { x :  util.descaleValue(x - this.img_object.x, this.current_zoom),
-                 y :  util.descaleValue(y - this.img_object.y, this.current_zoom)
+        return { x :  util.descaleValue(x - this.img_object.x(), this.current_zoom),
+                 y :  util.descaleValue(y - this.img_object.y(), this.current_zoom)
         };
     },
 
@@ -395,13 +476,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     imageToContainer : function (x,y)
     {
-        if(x > this.img_object.orig_width || y > this.img_object.orig_height)
+        if(x > this.img_object.orig_width() || y > this.img_object.orig_height())
         {
             return false;
         }
 
-        return { x : this.img_object.x + util.scaleValue(x, this.current_zoom),
-                 y : this.img_object.y + util.scaleValue(y, this.current_zoom)
+        return { x : this.img_object.x() + util.scaleValue(x, this.current_zoom),
+                 y : this.img_object.y() + util.scaleValue(y, this.current_zoom)
         };
     },
 
@@ -414,7 +495,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     getMouseCoords : function(e)
     {
-        var img_offset = this.img_object.object.offset();
+        var img_offset = this.img_object.imgOffset();
 
         return { x : util.descaleValue(e.pageX - img_offset.left, this.current_zoom),
                  y : util.descaleValue(e.pageY - img_offset.top, this.current_zoom)
@@ -450,33 +531,36 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         /* we fake these values to make fit zoom properly work */
         if(this.current_zoom == "fit")
         {
-            var old_x = Math.round(this.options.width/2 + this.img_object.orig_width/2);
-            var old_y = Math.round(this.options.height/2 + this.img_object.orig_height/2);
+            var old_x = Math.round(this.options.width/2 + this.img_object.orig_width()/2);
+            var old_y = Math.round(this.options.height/2 + this.img_object.orig_height()/2);
             this.current_zoom = 100;
         }
         else {
-            var old_x = -parseInt(this.img_object.object.css("left"),10) +
+            var old_x = -parseInt(this.img_object.object().css("left"),10) +
                                         Math.round(this.options.width/2);
-            var old_y = -parseInt(this.img_object.object.css("top"),10) +
+            var old_y = -parseInt(this.img_object.object().css("top"),10) +
                                         Math.round(this.options.height/2);
         }
 
-        var new_width = util.scaleValue(this.img_object.orig_width, new_zoom);
-        var new_height = util.scaleValue(this.img_object.orig_height, new_zoom);
+        var new_width = util.scaleValue(this.img_object.orig_width(), new_zoom);
+        var new_height = util.scaleValue(this.img_object.orig_height(), new_zoom);
         var new_x = util.scaleValue( util.descaleValue(old_x, this.current_zoom), new_zoom);
         var new_y = util.scaleValue( util.descaleValue(old_y, this.current_zoom), new_zoom);
 
         new_x = this.options.width/2 - new_x;
         new_y = this.options.height/2 - new_y;
 
-        this.img_object.display_width = new_width;
-        this.img_object.display_height = new_height;
+        this.img_object.display_width(new_width);
+        this.img_object.display_height(new_height);
 
-        $.extend( this.img_object, this._correctCoords( new_x, new_y ) );
+        var coords = this._correctCoords( new_x, new_y );
+        this.img_object.x(coords.x);
+        this.img_object.y(coords.y);
+
         if (this.options.zoom_animation) {
-            this.img_object.object.animate( { width: new_width, height: new_height, top: this.img_object.y, left: this.img_object.x }, 200 );
+            this.img_object.object().animate( { width: new_width, height: new_height, top: this.img_object.y(), left: this.img_object.x() }, 200 );
         } else {
-            this.img_object.object.css( { width: new_width, height: new_height, top: this.img_object.y, left: this.img_object.x });
+            this.img_object.object().css( { width: new_width, height: new_height, top: this.img_object.y(), left: this.img_object.x() });
         }
 
         this.current_zoom = new_zoom;
@@ -509,11 +593,17 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.set_zoom(next_zoom);
     },
 
+    /**
+    * Rotate image
+    * @param {num} deg Degrees amount to rotate. Positive values rotate image clockwise.
+    *     Currently 0, 90, 180, 270 and -90, -180, -270 values are supported
+    **/
     angle: function(deg) {
-        if (deg < 0 || deg > 270 || deg % 90 !== 0) { return; }
-        if (deg === this._angle) { return; }
+        if (deg < -270 || deg > 270 || deg % 90 !== 0) { return; }
+        if (deg === this.img_object.angle()) { return; }
 
-        //transform curent coordinates according to the rotation
+        this.img_object.angle(deg);
+        this.center();
     },
 
     /**
@@ -551,7 +641,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     {
         if(!this.options.ui_disabled)
         {
-            var percent = Math.round(100*this.img_object.display_height/this.img_object.orig_height);
+            var percent = Math.round(100*this.img_object.display_height()/this.img_object.orig_height());
             if(percent)
             {
                 this.zoom_object.html(percent + "%");
@@ -574,8 +664,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.dragged = true;
         this.container.addClass("iviewer_drag_cursor");
 
-        this.dx = e.pageX - this.img_object.x;
-        this.dy = e.pageY - this.img_object.y;
+        this.dx = e.pageX - this.img_object.x();
+        this.dy = e.pageY - this.img_object.y();
         return true;
     },
 
