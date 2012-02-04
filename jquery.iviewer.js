@@ -165,6 +165,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.zoom_object = {}; //object to show zoom status
         this.image_loaded = false;
 
+        this._angle = 0;
+
         this.current_zoom = this.options.zoom;
 
         if(this.options.src === null){
@@ -227,6 +229,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     loadImage: function( src )
     {
         this.current_zoom = this.options.zoom;
+        this._angle = 0;
         this.image_loaded = false;
         var me = this;
 
@@ -506,6 +509,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.set_zoom(next_zoom);
     },
 
+    angle: function(deg) {
+        if (deg < 0 || deg > 270 || deg % 90 !== 0) { return; }
+        if (deg === this._angle) { return; }
+
+        //transform curent coordinates according to the rotation
+    },
+
     /**
     * finds closest multiplier rate for value
     * basing on zoom_base and zoom_delta values from settings
@@ -615,24 +625,35 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     {
         var me=this;
 
-        $("<div>").addClass("iviewer_zoom_in").addClass("iviewer_common").
-        addClass("iviewer_button").
-        bind('mousedown touchstart',function(){me.zoom_by(1); return false;}).appendTo(this.container);
+        $("<div>").addClass("iviewer_zoom_in iviewer_common iviewer_button")
+                    .bind('mousedown touchstart',function(){me.zoom_by(1); return false;})
+                    .appendTo(this.container);
 
-        $("<div>").addClass("iviewer_zoom_out").addClass("iviewer_common").
-        addClass("iviewer_button").
-        bind('mousedown touchstart',function(){me.zoom_by(- 1); return false;}).appendTo(this.container);
+        $("<div>").addClass("iviewer_zoom_out iviewer_common iviewer_button")
+                    .bind('mousedown touchstart',function(){me.zoom_by(- 1); return false;})
+                    .appendTo(this.container);
 
-        $("<div>").addClass("iviewer_zoom_zero").addClass("iviewer_common").
-        addClass("iviewer_button").
-        bind('mousedown touchstart',function(){me.set_zoom(100); return false;}).appendTo(this.container);
+        $("<div>").addClass("iviewer_zoom_zero iviewer_common iviewer_button")
+                    .bind('mousedown touchstart',function(){me.set_zoom(100); return false;})
+                    .appendTo(this.container);
 
-        $("<div>").addClass("iviewer_zoom_fit").addClass("iviewer_common").
-        addClass("iviewer_button").
-        bind('mousedown touchstart',function(){me.fit(this); return false;}).appendTo(this.container);
+        $("<div>").addClass("iviewer_zoom_fit iviewer_common iviewer_button")
+                    .bind('mousedown touchstart',function(){me.fit(this); return false;})
+                    .appendTo(this.container);
 
-        this.zoom_object = $("<div>").addClass("iviewer_zoom_status").addClass("iviewer_common").
-        appendTo(this.container);
+        this.zoom_object = $("<div>").addClass("iviewer_zoom_status iviewer_common")
+                                    .appendTo(this.container);
+
+        var select = $('<select>')
+                    .append( $('<option>', {value: 0, html: '0'}))
+                    .append( $('<option>', {value: 90, html: '90'}))
+                    .append( $('<option>', {value: 180, html: '180'}))
+                    .append( $('<option>', {value: 270, html: '270'}))
+                    .bind('change',function(){me.angle(this.value); return false;});
+
+        $("<div>").addClass("iviewer_zoom_rotate iviewer_common")
+                .append(select)
+                .appendTo(this.container);
 
         this.update_status(); //initial status update
     }
