@@ -135,6 +135,10 @@ var ImageObject = function(img, do_anim) {
             vert = '_' + prefix + '_' + (name === 'height' ? 'width' : 'height');
         return setter(function(val) {
                 this[this._swapDimensions ? horiz: vert] = val;
+                if (useIeTransforms && prefix === 'display') {
+                    var prop = 'margin' + ( name === 'width' ? 'Left': 'Top');
+                    this._img.css(prop, ieTransforms[this.angle()][prop] * this.display_diff() / 2);
+                }
             },
             function() {
                 return this[this._swapDimensions ? horiz: vert];
