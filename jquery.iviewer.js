@@ -27,10 +27,10 @@ function makeMouseEvent (event) {
     var touch = event.originalEvent.changedTouches[0];
 
     return $.extend(event, {
-        type:        mouseEvents[event.type],
-        which:     1,
-        pageX:     touch.pageX,
-        pageY:     touch.pageY,
+        type:    mouseEvents[event.type],
+        which:   1,
+        pageX:   touch.pageX,
+        pageY:   touch.pageY,
         screenX: touch.screenX,
         screenY: touch.screenY,
         clientX: touch.clientX,
@@ -77,13 +77,41 @@ var setter = function(setter, getter) {
         if (arguments.length === 0) {
             return getter.apply(this);
         } else {
-            setter.call(this, val);
+            setter.apply(this, arguments);
         }
     }
 };
 
-var ImageObject = function(img) {
+var ieTransforms = {
+        '0': {
+            marginLeft: 0,
+            marginTop: 0,
+            filter: ''
+        },
+
+        '90': {
+            marginLeft: -1,
+            marginTop: 1,
+            filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=0, M12=-1, M21=1, M22=0, SizingMethod="auto expand")'
+        },
+
+        '180': {
+            marginLeft: 0,
+            marginTop: 0,
+            filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=-1, M12=0, M21=0, M22=-1, SizingMethod="auto expand")'
+        },
+
+        '270': {
+            marginLeft: -1,
+            marginTop: 1,
+            filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=0, M12=1, M21=-1, M22=0, SizingMethod="auto expand")'
+        }
+    },
+    useIeTransforms = (jQuery.browser.msie && parseInt(jQuery.browser.version, 10) <= 8);
+
+var ImageObject = function(img, do_anim) {
     this._img = img;
+    this._do_anim = do_anim || false;
     this.x(0)
     this.y(0)
     this.angle(0);
@@ -119,25 +147,37 @@ var ImageObject = function(img) {
     this.orig_width = this._dimension('orig', 'width'),
     this.orig_height = this._dimension('orig', 'height'),
 
-    this.x = setter(function(val) { 
+    this.x = setter(function(val, skipCss) { 
             this._x = val;
-            this._img.css("left",this._x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
+            if (!skipCss) {
+                this._img.css("left",this._x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
+            }
         },
         function() {
             return this._x;
         });
 
-    this.y = setter(function(val) {
+    this.y = setter(function(val, skipCss) {
             this._y = val;
-            this._img.css("top",this._y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
+            if (!skipCss) {
+                this._img.css("top",this._y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
+            }
         },
        function() {
             return this._y;
        });
 
     this.angle = setter(function(deg) {
+            var prevSwap = this._swapDimensions;
+
             this._angle = deg;
             this._swapDimensions = deg % 180 !== 0;
+            
+            if (prevSwap !== this._swapDimensions) {
+                var verticalMod = this._swapDimensions ? -1 : 1;
+                this.x(this.x() - verticalMod * this.display_diff() / 2, true);
+                this.y(this.y() + verticalMod * this.display_diff() / 2, true);
+            };
 
             var cssVal = 'rotate(' + deg + 'deg)',
                 img = this._img;
@@ -145,6 +185,17 @@ var ImageObject = function(img) {
             jQuery.each(['', '-webkit-', '-moz-', '-o-', '-ms-'], function(i, prefix) {
                 img.css(prefix + 'transform', cssVal);
             });
+
+            if (useIeTransforms) {
+                jQuery.each(['-ms-', ''], function(i, prefix) {
+                    img.css(prefix + 'filter', ieTransforms[deg].filter);
+                });
+
+                img.css({
+                    marginLeft: ieTransforms[deg].marginLeft * this.display_diff() / 2,
+                    marginTop: ieTransforms[deg].marginTop * this.display_diff() / 2
+                });
+            }
         },
        function() { return this._angle; });
 
@@ -153,6 +204,29 @@ var ImageObject = function(img) {
 
     this.object = setter(jQuery.noop,
                            function() { return this._img; });
+
+    this.setImageProps = function(disp_w, disp_h, x, y) {
+        this.display_width(disp_w);
+        this.display_height(disp_h);
+        this.x(x, true);
+        this.y(y, true);
+
+        var w = this._swapDimensions ? disp_h : disp_w;
+        var h = this._swapDimensions ? disp_w : disp_h;
+
+        var params = {
+            width: w,
+            height: h,
+            top: y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px",
+            left: x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px" 
+        };
+
+        if (this._do_anim) {
+            this._img.animate(params, 200);
+        } else {
+            this._img.css(params);
+        }
+    };
 
 }).apply(ImageObject.prototype);
 
@@ -288,7 +362,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         });
 
         img.prependTo(me.container);
-        this.img_object = new ImageObject(img);
+        this.img_object = new ImageObject(img, this.options.zoom_animation);
 
         this.loadImage(this.options.src);
 
@@ -376,8 +450,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     center: function()
     {
-        this.setCoords(-Math.round((this.img_object.display_height() - this.options.height)/2),
-                       -Math.round((this.img_object.display_width() - this.options.width)/2));
+        this.setCoords(-Math.round((this.img_object.display_width() - this.options.width)/2),
+                -Math.round((this.img_object.display_height() - this.options.height)/2));
     },
 
     /**
@@ -536,10 +610,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             this.current_zoom = 100;
         }
         else {
-            var old_x = -parseInt(this.img_object.object().css("left"),10) +
-                                        Math.round(this.options.width/2);
-            var old_y = -parseInt(this.img_object.object().css("top"),10) +
-                                        Math.round(this.options.height/2);
+            var old_x = -this.img_object.x() + Math.round(this.options.width/2);
+            var old_y = -this.img_object.y() + Math.round(this.options.height/2);
         }
 
         var new_width = util.scaleValue(this.img_object.orig_width(), new_zoom);
@@ -554,15 +626,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.img_object.display_height(new_height);
 
         var coords = this._correctCoords( new_x, new_y );
-        this.img_object.x(coords.x);
-        this.img_object.y(coords.y);
 
-        if (this.options.zoom_animation) {
-            this.img_object.object().animate( { width: new_width, height: new_height, top: this.img_object.y(), left: this.img_object.x() }, 200 );
-        } else {
-            this.img_object.object().css( { width: new_width, height: new_height, top: this.img_object.y(), left: this.img_object.x() });
-        }
-
+        this.img_object.setImageProps(new_width, new_height, coords.x, coords.y);
         this.current_zoom = new_zoom;
 
         $.isFunction( this.options.onAfterZoom ) && this.options.onAfterZoom.call( this, new_zoom );
@@ -635,6 +700,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         return sgn * rate;
     },
+
+    io: function() { return this.img_object; },
 
     /* update scale info in the container */
     update_status: function()
