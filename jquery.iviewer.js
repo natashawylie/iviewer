@@ -232,8 +232,25 @@ var ImageObject = function(do_anim) {
         },
        function() { return this._angle; });
 
-    this.imgOffset = setter(jQuery.noop,
-                           function() { return this._img.offset(); });
+    this.getImagePoint = function(pageX, pageY) {
+        var offset = this._img.offset(),
+            points = { 
+                x : pageX - offset.left,
+                y : pageY - offset.top 
+            },
+            start = this._getOriginalCords(points);
+
+        return jQuery.extend({}, points, start);
+    };
+
+    this._getOriginalCords = function(point) {
+        switch (this.angle()) {
+            case 0: return { origx: point.x, origy: point.y }
+            case 90: return { origx: point.y, origy: this.display_width() - point.x }
+            case 180: return { origx: this.display_width() - point.x, origy: this.display_height() - point.y }
+            case 270: return { origx: this.display_height() - point.y, origy: point.x }
+        }
+    };
 
     this.object = setter(jQuery.noop,
                            function() { return this._img; });
@@ -582,11 +599,14 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     getMouseCoords : function(e)
     {
-        var img_offset = this.img_object.imgOffset();
+        var coords = this.img_object.getImagePoint(e.pageX, e.pageY),
+            zoom = this.current_zoom;
 
-        return { x : util.descaleValue(e.pageX - img_offset.left, this.current_zoom),
-                 y : util.descaleValue(e.pageY - img_offset.top, this.current_zoom)
-        };
+        jQuery.each(coords, function(prop, value) {
+            coords[prop] = util.descaleValue(value, zoom);
+        });
+
+        return coords;
     },
 
     /**
@@ -791,6 +811,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
     click: function(e)
     {
+        var coords = this.getMouseCoords(e);
+        console.log(coords.x, coords.y, coords.origx, coords.origy);
         this.options.onClick &&
                 this.options.onClick.call(this,this.getMouseCoords(e));
     },
