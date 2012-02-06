@@ -114,6 +114,8 @@ var ImageObject = function(do_anim) {
             //this is needed, because chromium sets them auto otherwise
             .css({ position: "absolute", top :"0px", left: "0px"});
 
+    this._loaded = false;
+    this._swapDimensions = false;
     this._do_anim = do_anim || false;
     this.x(0, true);
     this.y(0, true);
@@ -133,10 +135,13 @@ var ImageObject = function(do_anim) {
         this.display_height(h);
     };
 
+    this.loaded = function() { return this._loaded; };
+
     this.load = function(src, loaded) {
         var self = this;
 
         loaded = loaded || jQuery.noop;
+        this._loaded = false;
 
         this._img
             .removeAttr("src")
@@ -145,6 +150,7 @@ var ImageObject = function(do_anim) {
             .removeAttr("style")
             .css({ position: "absolute", top :"0px", left: "0px"})
             .one('load', function(){
+                self._loaded = true;
                 self.reset(this.width, this.height);
                 loaded();
 
@@ -349,7 +355,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.img_object
 
         this.zoom_object = {}; //object to show zoom status
-        this.image_loaded = false;
 
         this._angle = 0;
 
@@ -413,7 +418,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     loadImage: function( src )
     {
         this.current_zoom = this.options.zoom;
-        this.image_loaded = false;
         var me = this;
 
         if(this.options.onStartLoad) {
@@ -421,11 +425,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         }
 
         this.img_object.load(src, function() {
-                me.image_loaded = true;
-
-                if(!me.container.hasClass("iviewer_cursor")){
-                    me.container.addClass("iviewer_cursor");
-                }
+                me.container.addClass("iviewer_cursor");
 
                 if(me.options.zoom == "fit"){
                     me.fit();
@@ -499,10 +499,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     setCoords: function(x,y)
     {
         //do nothing while image is being loaded
-        if(!this.image_loaded)
-        {
-            return;
-        }
+        if(!this.img_object.loaded()) { return; }
 
         var coords = this._correctCoords(x,y);
         this.img_object.x(coords.x);
@@ -604,10 +601,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         }
 
         //do nothing while image is being loaded
-        if(!this.image_loaded)
-        {
-            return;
-        }
+        if(!this.img_object.loaded()) { return; }
 
         if(new_zoom <  this.options.zoom_min)
         {
