@@ -723,8 +723,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         return sgn * rate;
     },
 
-    io: function() { return this.img_object; },
-
     /* update scale info in the container */
     update_status: function()
     {
