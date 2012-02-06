@@ -109,11 +109,14 @@ var ieTransforms = {
     },
     useIeTransforms = (jQuery.browser.msie && parseInt(jQuery.browser.version, 10) <= 8);
 
-var ImageObject = function(img, do_anim) {
-    this._img = img;
+var ImageObject = function(do_anim) {
+    this._img = $("<img>")
+            //this is needed, because chromium sets them auto otherwise
+            .css({ position: "absolute", top :"0px", left: "0px"});
+
     this._do_anim = do_anim || false;
-    this.x(0)
-    this.y(0)
+    this.x(0, true);
+    this.y(0, true);
     this.angle(0);
 };
 
@@ -128,6 +131,26 @@ var ImageObject = function(img, do_anim) {
         this.orig_height(h);
         this.display_width(w);
         this.display_height(h);
+    };
+
+    this.load = function(src, loaded) {
+        var self = this;
+
+        loaded = loaded || jQuery.noop;
+
+        this._img
+            .removeAttr("src")
+            .removeAttr("width")
+            .removeAttr("height")
+            .removeAttr("style")
+            .css({ position: "absolute", top :"0px", left: "0px"})
+            .one('load', function(){
+                self.reset(this.width, this.height);
+                loaded();
+
+            })
+            //src attribute is after setting load event, or it won't work
+            .attr("src",src);
     };
 
     this._dimension = function(prefix, name) {
@@ -351,22 +374,21 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             });
         }
 
-        //init object
-        var img = $("<img>").
-            css({ position: "absolute", top :"0px", left: "0px"}). //this is needed, because chromium sets them auto otherwise
-        //bind mouse events
-        click(function(e){return me.click(e)}).
-        mousewheel(function(ev, delta)
-        {
-            //this event is there instead of containing div, because
-            //at opera it triggers many times on div
-            var zoom = (delta > 0)?1:-1;
-            me.zoom_by(zoom);
-            return false;
-        });
+        this.img_object = new ImageObject(this.options.zoom_animation);
 
-        img.prependTo(me.container);
-        this.img_object = new ImageObject(img, this.options.zoom_animation);
+        //init object
+        this.img_object.object()
+            //bind mouse events
+            .click(function(e){return me.click(e)})
+            .mousewheel(function(ev, delta)
+            {
+                //this event is there instead of containing div, because
+                //at opera it triggers many times on div
+                var zoom = (delta > 0)?1:-1;
+                me.zoom_by(zoom);
+                return false;
+            })
+            .prependTo(this.container);
 
         this.loadImage(this.options.src);
 
@@ -394,20 +416,12 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.image_loaded = false;
         var me = this;
 
-        if(this.options.onStartLoad)
-        {
+        if(this.options.onStartLoad) {
            this.options.onStartLoad.call(this);
         }
 
-        this.img_object.object().unbind('load').
-            removeAttr("src").
-            removeAttr("width").
-            removeAttr("height").
-            removeAttr("style").
-            css({ position: "absolute", top :"0px", left: "0px"}).
-            load(function(){
+        this.img_object.load(src, function() {
                 me.image_loaded = true;
-                me.img_object.reset(this.width, this.height);
 
                 if(!me.container.hasClass("iviewer_cursor")){
                     me.container.addClass("iviewer_cursor");
@@ -424,9 +438,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                 {
                    me.options.onFinishLoad.call(me);
                 }
-
-            //src attribute is after setting load event, or it won't work
-        }).attr("src",src);
+        });
     },
 
     /**
@@ -468,8 +480,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         var dx = x-Math.round(this.options.width/2);
         var dy = y-Math.round(this.options.height/2);
 
-        var new_x = this.img_object().x - dx;
-        var new_y = this.img_object().y - dy;
+        var new_x = this.img_object.x() - dx;
+        var new_y = this.img_object.y() - dy;
 
         this.setCoords(new_x, new_y);
     },
