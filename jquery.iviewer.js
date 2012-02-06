@@ -666,12 +666,24 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     * Rotate image
     * @param {num} deg Degrees amount to rotate. Positive values rotate image clockwise.
     *     Currently 0, 90, 180, 270 and -90, -180, -270 values are supported
+    *
+    * @param {boolean} abs If the flag is true if, the deg parameter will be considered as
+    *     a absolute value and relative otherwise.
+    * @return {num|null} Method will return current image angle if called without any arguments.
     **/
-    angle: function(deg) {
+    angle: function(deg, abs) {
+        if (arguments.length === 0) { return this.img_object.angle(); }
+
         if (deg < -270 || deg > 270 || deg % 90 !== 0) { return; }
+        if (!abs) { deg += this.img_object.angle(); }
+        if (deg < 0) { deg += 360; }
+        if (deg >= 360) { deg -= 360; }
+
         if (deg === this.img_object.angle()) { return; }
 
         this.img_object.angle(deg);
+        //the rotate behavior is different in all editors. For now we  just center the
+        //image. However, it will be better to try to keep the position.
         this.center();
     },
 
