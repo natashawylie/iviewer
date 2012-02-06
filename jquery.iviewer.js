@@ -802,35 +802,32 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     {
         var me=this;
 
-        $("<div>").addClass("iviewer_zoom_in iviewer_common iviewer_button")
+        $("<div>", { class: "iviewer_zoom_in iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.zoom_by(1); return false;})
                     .appendTo(this.container);
 
-        $("<div>").addClass("iviewer_zoom_out iviewer_common iviewer_button")
+        $("<div>", { class: "iviewer_zoom_out iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.zoom_by(- 1); return false;})
                     .appendTo(this.container);
 
-        $("<div>").addClass("iviewer_zoom_zero iviewer_common iviewer_button")
+        $("<div>", { class: "iviewer_zoom_zero iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.set_zoom(100); return false;})
                     .appendTo(this.container);
 
-        $("<div>").addClass("iviewer_zoom_fit iviewer_common iviewer_button")
+        $("<div>", { class: "iviewer_zoom_fit iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.fit(this); return false;})
                     .appendTo(this.container);
 
         this.zoom_object = $("<div>").addClass("iviewer_zoom_status iviewer_common")
                                     .appendTo(this.container);
 
-        var select = $('<select>')
-                    .append( $('<option>', {value: 0, html: '0'}))
-                    .append( $('<option>', {value: 90, html: '90'}))
-                    .append( $('<option>', {value: 180, html: '180'}))
-                    .append( $('<option>', {value: 270, html: '270'}))
-                    .bind('change',function(){me.angle(this.value); return false;});
+        $("<div>", { html: '↶', class: "iviewer_rotate_left iviewer_common iviewer_button"})
+                    .bind('mousedown touchstart',function(){me.angle(-90); return false;})
+                    .appendTo(this.container);
 
-        $("<div>").addClass("iviewer_zoom_rotate iviewer_common")
-                .append(select)
-                .appendTo(this.container);
+        $("<div>", { html: '↷', class: "iviewer_rotate_right iviewer_common iviewer_button" })
+                    .bind('mousedown touchstart',function(){me.angle(90); return false;})
+                    .appendTo(this.container);
 
         this.update_status(); //initial status update
     }

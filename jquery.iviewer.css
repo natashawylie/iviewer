@@ -50,7 +50,16 @@
     width: 60px;
 }
 
-.iviewer_zoom_rotate {
-    background-color: #fff;
+.iviewer_rotate_left {
     left: 227px;
+    font-size: 28px;
+    text-align: center;
+    background-color: #fff;
+}
+
+.iviewer_rotate_right {
+    left: 262px;
+    font-size: 28px;
+    text-align: center;
+    background-color: #fff;
 }
