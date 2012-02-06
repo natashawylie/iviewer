@@ -238,12 +238,12 @@ var ImageObject = function(do_anim) {
                 x : pageX - offset.left,
                 y : pageY - offset.top 
             },
-            start = this._getOriginalCords(points);
+            start = this.getOriginalCords(points);
 
         return jQuery.extend({}, points, start);
     };
 
-    this._getOriginalCords = function(point) {
+    this.getOriginalCords = function(point) {
         switch (this.angle()) {
             case 0: return { origx: point.x, origy: point.y }
             case 90: return { origx: point.y, origy: this.display_width() - point.x }
@@ -573,21 +573,27 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     /**
-    * convert coordinates on the image (in original size) to the coordinates on the container
+    * convert coordinates on the image (in original size, and zero angle) to the coordinates on the container
     *
-    * @return object with fields x,y according to coordinates or false
-    * if initial coords are not inside image
+    * @return object with fields x,y according to coordinates
     **/
     imageToContainer : function (x,y)
     {
-        if(x > this.img_object.orig_width() || y > this.img_object.orig_height())
-        {
-            return false;
-        }
+        var imgOffset = {
+                x : this.img_object.x(),
+                y : this.img_object.y()
+            },
+            coords = {
+                x : util.scaleValue(x, this.current_zoom),
+                y : util.scaleValue(y, this.current_zoom)
+            };
 
-        return { x : this.img_object.x() + util.scaleValue(x, this.current_zoom),
-                 y : this.img_object.y() + util.scaleValue(y, this.current_zoom)
-        };
+        switch (this.img_object.angle()) {
+            case 0: return { x: imgOffset.x + coords.x, y: imgOffset.y + coords.y }
+            case 90: return { x: imgOffset.x + this.img_object.display_width() - coords.y, y: imgOffset.y + coords.x}
+            case 180: return { x: imgOffset.x + this.img_object.display_width() - coords.x, y: imgOffset.y + this.img_object.display_height() - coords.y}
+            case 270: return { x: imgOffset.x + coords.y, y: imgOffset.y + this.img_object.display_height() - coords.x}
+        }
     },
 
     /**
