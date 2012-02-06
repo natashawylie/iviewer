@@ -560,16 +560,16 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     containerToImage : function (x,y)
     {
-        if(x < this.img_object.x() || y < this.img_object.y() ||
-           x > this.img_object.x() + this.img_object.display_width() ||
-           y > this.img_object.y() + this.img_object.display_height())
-        {
-            return false;
-        }
-
-        return { x :  util.descaleValue(x - this.img_object.x(), this.current_zoom),
+        var coords = { x :  util.descaleValue(x - this.img_object.x(), this.current_zoom),
                  y :  util.descaleValue(y - this.img_object.y(), this.current_zoom)
         };
+
+        switch (this.img_object.angle()) {
+            case 0: return { x: coords.x, y: coords.y }
+            case 90: return { x: coords.y, y: this.img_object.orig_width() - coords.x}
+            case 180: return { x: this.img_object.orig_width() - coords.x, y: this.img_object.orig_height() - coords.y}
+            case 270: return { x: this.img_object.orig_height() - coords.y, y: coords.x}
+        }
     },
 
     /**
