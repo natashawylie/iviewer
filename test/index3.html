@@ -67,20 +67,20 @@
                     src: "test_active_with_objects.GIF",
 
                     onClick: function(coords) {
-                        var object = whereIam(coords.origx, coords.origy);
+                        var object = whereIam(coords.x, coords.y);
                         
                         if (object) 
-                            alert('Clicked at ('+coords.origx+', '+coords.origy+'). This is '+object.title);
+                            alert('Clicked at ('+coords.x+', '+coords.y+'). This is '+object.title);
                     },
 
                     onMouseMove: function(coords) {
                         var object = whereIam(coords.x, coords.y);
                         
                         if (object) {
-                            $('#status').html('You are in ('+coords.origx.toFixed(1)+', '+coords.origy.toFixed(1)+'). This is '+object.title);
+                            $('#status').html('You are in ('+coords.x.toFixed(1)+', '+coords.y.toFixed(1)+'). This is '+object.title);
                             this.container.css('cursor', 'crosshair');
                         } else {
-                            $('#status').html('You are in ('+coords.origx.toFixed(1)+', '+coords.origy.toFixed(1)+'). This is empty space');
+                            $('#status').html('You are in ('+coords.x.toFixed(1)+', '+coords.y.toFixed(1)+'). This is empty space');
                             this.container.css('cursor', null);
                         }                            
                     },

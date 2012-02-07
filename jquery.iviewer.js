@@ -232,23 +232,21 @@ var ImageObject = function(do_anim) {
         },
        function() { return this._angle; });
 
-    this.getImagePoint = function(pageX, pageY) {
-        var offset = this._img.offset(),
-            points = { 
-                x : pageX - offset.left,
-                y : pageY - offset.top 
-            },
-            start = this.getOriginalCords(points);
-
-        return jQuery.extend({}, points, start);
-    };
-
-    this.getOriginalCords = function(point) {
+    this.toOriginalCoords = function(point) {
         switch (this.angle()) {
             case 0: return { origx: point.x, origy: point.y }
             case 90: return { origx: point.y, origy: this.display_width() - point.x }
             case 180: return { origx: this.display_width() - point.x, origy: this.display_height() - point.y }
             case 270: return { origx: this.display_height() - point.y, origy: point.x }
+        }
+    };
+
+    this.toRealCoords = function(point) {
+        switch (this.angle()) {
+            case 0: return { x: this.x() + point.x, y: this.y() + point.y }
+            case 90: return { x: this.x() + this.display_width() - point.y, y: this.y() + point.x}
+            case 180: return { x: this.x() + this.display_width() - point.x, y: this.y() + this.display_height() - point.y}
+            case 270: return { x: this.x() + point.y, y: this.y() + this.display_height() - point.x}
         }
     };
 
@@ -361,7 +359,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         //drag variables
         this.dx = 0;
         this.dy = 0;
-        this.dragged = false;
 
         /* object containing actual information about image
         *   @img_object.object - jquery img object
@@ -560,16 +557,15 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     containerToImage : function (x,y)
     {
-        var coords = { x :  util.descaleValue(x - this.img_object.x(), this.current_zoom),
-                 y :  util.descaleValue(y - this.img_object.y(), this.current_zoom)
+        var coords = { x : x - this.img_object.x(),
+                 y :  y - this.img_object.y()
         };
 
-        switch (this.img_object.angle()) {
-            case 0: return { x: coords.x, y: coords.y }
-            case 90: return { x: coords.y, y: this.img_object.orig_width() - coords.x}
-            case 180: return { x: this.img_object.orig_width() - coords.x, y: this.img_object.orig_height() - coords.y}
-            case 270: return { x: this.img_object.orig_height() - coords.y, y: coords.x}
-        }
+        coords = this.img_object.toOriginalCoords(coords);
+
+        return { x :  util.descaleValue(coords.origx, this.current_zoom),
+                 y :  util.descaleValue(coords.origy, this.current_zoom)
+        };
     },
 
     /**
@@ -579,21 +575,12 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     imageToContainer : function (x,y)
     {
-        var imgOffset = {
-                x : this.img_object.x(),
-                y : this.img_object.y()
-            },
-            coords = {
+        var coords = {
                 x : util.scaleValue(x, this.current_zoom),
                 y : util.scaleValue(y, this.current_zoom)
             };
 
-        switch (this.img_object.angle()) {
-            case 0: return { x: imgOffset.x + coords.x, y: imgOffset.y + coords.y }
-            case 90: return { x: imgOffset.x + this.img_object.display_width() - coords.y, y: imgOffset.y + coords.x}
-            case 180: return { x: imgOffset.x + this.img_object.display_width() - coords.x, y: imgOffset.y + this.img_object.display_height() - coords.y}
-            case 270: return { x: imgOffset.x + coords.y, y: imgOffset.y + this.img_object.display_height() - coords.x}
-        }
+        return this.img_object.toRealCoords(coords);
     },
 
     /**
@@ -605,12 +592,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     getMouseCoords : function(e)
     {
-        var coords = this.img_object.getImagePoint(e.pageX, e.pageY),
+        var containerOffset = this.container.offset();
+            coords = this.containerToImage(e.pageX - containerOffset.left, e.pageY - containerOffset.top),
             zoom = this.current_zoom;
-
-        jQuery.each(coords, function(prop, value) {
-            coords[prop] = util.descaleValue(value, zoom);
-        });
 
         return coords;
     },
@@ -774,7 +758,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         }
 
         /* start drag event*/
-        this.dragged = true;
         this.container.addClass("iviewer_drag_cursor");
 
         this.dx = e.pageX - this.img_object.x();
@@ -786,24 +769,25 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         return true;
     },
 
+    _mouseMove: function(e) {
+        this.options.onMouseMove &&
+                this.options.onMouseMove.call(this, this.getMouseCoords(e));
+        $.ui.mouse.prototype._mouseMove.call(this, e);
+    },
+
     /**
     *   callback for handling mousmove event to drag image
     **/
     _mouseDrag: function(e)
     {
-        this.options.onMouseMove &&
-                this.options.onMouseMove.call(this,this.getMouseCoords(e));
+        this.options.onDrag &&
+                this.options.onDrag.call(this, this.getMouseCoords(e));
 
-        if(this.dragged){
-            this.options.onDrag &&
-                    this.options.onDrag.call(this,this.getMouseCoords(e));
+        var ltop =  e.pageY - this.dy;
+        var lleft = e.pageX - this.dx;
 
-            var ltop =  e.pageY - this.dy;
-            var lleft = e.pageX - this.dx;
-
-            this.setCoords(lleft, ltop);
-            return false;
-        }
+        this.setCoords(lleft, ltop);
+        return false;
     },
 
     /**
@@ -812,13 +796,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     _mouseStop: function(e)
     {
         this.container.removeClass("iviewer_drag_cursor");
-        this.dragged=false;
     },
 
     click: function(e)
     {
         var coords = this.getMouseCoords(e);
-        console.log(coords.x, coords.y, coords.origx, coords.origy);
         this.options.onClick &&
                 this.options.onClick.call(this,this.getMouseCoords(e));
     },
