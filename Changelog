@@ -4,3 +4,4 @@ Version 0.6
 * Image rotation feature
 * onAfterZoom is working again
 * onMouseMove callback is working again
+* Do not animation image on initial load (only zoom will be animated now)

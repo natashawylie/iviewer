@@ -253,7 +253,7 @@ var ImageObject = function(do_anim) {
     this.object = setter(jQuery.noop,
                            function() { return this._img; });
 
-    this.setImageProps = function(disp_w, disp_h, x, y, complete) {
+    this.setImageProps = function(disp_w, disp_h, x, y, skip_animation, complete) {
         complete = complete || jQuery.noop;
         this.display_width(disp_w);
         this.display_height(disp_h);
@@ -270,7 +270,7 @@ var ImageObject = function(do_anim) {
             left: x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px" 
         };
 
-        if (this._do_anim) {
+        if (this._do_anim && !skip_animation) {
             this._img.animate(params, 200, complete);
         } else {
             this._img.css(params);
@@ -454,10 +454,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                 me.container.addClass("iviewer_cursor");
 
                 if(me.options.zoom == "fit"){
-                    me.fit();
+                    me.fit(true);
                 }
                 else {
-                    me.set_zoom(me.options.zoom);
+                    me.set_zoom(me.options.zoom, true);
                 }
 
                 if(me.options.onFinishLoad)
@@ -469,8 +469,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
     /**
     * fits image in the container
+    *
+    * @param {boolean} skip_animation
     **/
-    fit: function()
+    fit: function(skip_animation)
     {
         var aspect_ratio = this.img_object.orig_width() / this.img_object.orig_height();
         var window_ratio = this.options.width /  this.options.height;
@@ -484,7 +486,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             new_zoom = this.options.height / this.img_object.orig_height() * 100;
         }
 
-      this.set_zoom(new_zoom);
+      this.set_zoom(new_zoom, skip_animation);
     },
 
     /**
@@ -613,9 +615,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
     /**
     * set image scale to the new_zoom
-    * @param new_zoom image scale in %
+    *
+    * @param {number} new_zoom image scale in %
+    * @param {boolean} skip_animation
     **/
-    set_zoom: function(new_zoom)
+    set_zoom: function(new_zoom, skip_animation)
     {
         if(this.options.onZoom.call(this, new_zoom) == false)
         {
@@ -660,7 +664,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         var coords = this._correctCoords( new_x, new_y ),
             self = this;
 
-        this.img_object.setImageProps(new_width, new_height, coords.x, coords.y, function() {
+        this.img_object.setImageProps(new_width, new_height, coords.x, coords.y,
+                                        skip_animation, function() {
             self.options.onAfterZoom.call( this, new_zoom );
         });
         this.current_zoom = new_zoom;
