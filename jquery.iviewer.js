@@ -417,6 +417,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             })
             .prependTo(this.container);
 
+        if (this.options.onMouseMove !== jQuery.noop) {
+            this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
+        }
+
         this.loadImage(this.options.src);
 
         if(!this.options.ui_disabled)
@@ -778,9 +782,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         return true;
     },
 
-    _mouseMove: function(e) {
+    /**
+     * Handle mouse move if needed. User can avoid using this callback, because
+     *    he can get the same information through public methods.
+     *  @param {jQuery.Event} e
+     */
+    _handleMouseMove: function(e) {
         this.options.onMouseMove.call(this, this.getMouseCoords(e));
-        $.ui.mouse.prototype._mouseMove.call(this, e);
     },
 
     /**

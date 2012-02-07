@@ -3,3 +3,4 @@ Version 0.6
 * Changelog file (eventually)
 * Image rotation feature
 * onAfterZoom is working again
+* onMouseMove callback is working again
