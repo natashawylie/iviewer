@@ -253,7 +253,8 @@ var ImageObject = function(do_anim) {
     this.object = setter(jQuery.noop,
                            function() { return this._img; });
 
-    this.setImageProps = function(disp_w, disp_h, x, y) {
+    this.setImageProps = function(disp_w, disp_h, x, y, complete) {
+        complete = complete || jQuery.noop;
         this.display_width(disp_w);
         this.display_height(disp_h);
         this.x(x, true);
@@ -270,9 +271,10 @@ var ImageObject = function(do_anim) {
         };
 
         if (this._do_anim) {
-            this._img.animate(params, 200);
+            this._img.animate(params, 200, complete);
         } else {
             this._img.css(params);
+            complete();
         }
     };
 
@@ -321,28 +323,34 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         * @param int new zoom value
         * @return boolean if false zoom action is aborted
         **/
-        onZoom: null,
+        onZoom: jQuery.noop,
+        /**
+        * event is triggered when zoom value is changed after image is set to the new dimensions
+        * @param int new zoom value
+        * @return boolean if false zoom action is aborted
+        **/
+        onAfterZoom: jQuery.noop,
         /**
         * event is fired on drag begin
         * @param object coords mouse coordinates on the image
         * @return boolean if false is returned, drag action is aborted
         **/
-        onStartDrag: null,
+        onStartDrag: jQuery.noop,
         /**
         * event is fired on drag action
         * @param object coords mouse coordinates on the image
         **/
-        onDrag: null,
+        onDrag: jQuery.noop,
         /**
         * event is fired when mouse moves over image
         * @param object coords mouse coordinates on the image
         **/
-        onMouseMove: null,
+        onMouseMove: jQuery.noop,
         /**
         * mouse click event
         * @param object coords mouse coordinates on the image
         **/
-        onClick: null,
+        onClick: jQuery.noop,
         /**
         * event is fired when image starts to load
         */
@@ -605,7 +613,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     set_zoom: function(new_zoom)
     {
-        if(this.options.onZoom && this.options.onZoom.call(this, new_zoom) == false)
+        if(this.options.onZoom.call(this, new_zoom) == false)
         {
             return;
         }
@@ -645,12 +653,14 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.img_object.display_width(new_width);
         this.img_object.display_height(new_height);
 
-        var coords = this._correctCoords( new_x, new_y );
+        var coords = this._correctCoords( new_x, new_y ),
+            self = this;
 
-        this.img_object.setImageProps(new_width, new_height, coords.x, coords.y);
+        this.img_object.setImageProps(new_width, new_height, coords.x, coords.y, function() {
+            self.options.onAfterZoom.call( this, new_zoom );
+        });
         this.current_zoom = new_zoom;
 
-        $.isFunction( this.options.onAfterZoom ) && this.options.onAfterZoom.call( this, new_zoom );
         this.update_status();
     },
 
@@ -751,8 +761,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     _mouseStart: function( e )
     {
-        if(this.options.onStartDrag &&
-           this.options.onStartDrag.call(this,this.getMouseCoords(e)) == false)
+        if (this.options.onStartDrag.call(this,this.getMouseCoords(e)) == false)
         {
             return false;
         }
@@ -770,8 +779,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     _mouseMove: function(e) {
-        this.options.onMouseMove &&
-                this.options.onMouseMove.call(this, this.getMouseCoords(e));
+        this.options.onMouseMove.call(this, this.getMouseCoords(e));
         $.ui.mouse.prototype._mouseMove.call(this, e);
     },
 
@@ -780,8 +788,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     _mouseDrag: function(e)
     {
-        this.options.onDrag &&
-                this.options.onDrag.call(this, this.getMouseCoords(e));
+        this.options.onDrag.call(this, this.getMouseCoords(e));
 
         var ltop =  e.pageY - this.dy;
         var lleft = e.pageX - this.dx;
@@ -800,9 +807,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
     click: function(e)
     {
-        var coords = this.getMouseCoords(e);
-        this.options.onClick &&
-                this.options.onClick.call(this,this.getMouseCoords(e));
+        this.options.onClick.call(this,this.getMouseCoords(e));
     },
 
     /**
