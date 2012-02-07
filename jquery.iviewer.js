@@ -602,7 +602,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     * @return object with fields x,y according to coordinates or false
     * if initial coords are not inside image
     **/
-    getMouseCoords : function(e)
+    _getMouseCoords : function(e)
     {
         var containerOffset = this.container.offset();
             coords = this.containerToImage(e.pageX - containerOffset.left, e.pageY - containerOffset.top),
@@ -765,7 +765,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     _mouseStart: function( e )
     {
-        if (this.options.onStartDrag.call(this,this.getMouseCoords(e)) == false)
+        if (this.options.onStartDrag.call(this,this._getMouseCoords(e)) == false)
         {
             return false;
         }
@@ -788,7 +788,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
      *  @param {jQuery.Event} e
      */
     _handleMouseMove: function(e) {
-        this.options.onMouseMove.call(this, this.getMouseCoords(e));
+        this.options.onMouseMove.call(this, this._getMouseCoords(e));
     },
 
     /**
@@ -796,7 +796,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     _mouseDrag: function(e)
     {
-        this.options.onDrag.call(this, this.getMouseCoords(e));
+        this.options.onDrag.call(this, this._getMouseCoords(e));
 
         var ltop =  e.pageY - this.dy;
         var lleft = e.pageX - this.dx;
@@ -815,7 +815,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
     click: function(e)
     {
-        this.options.onClick.call(this,this.getMouseCoords(e));
+        this.options.onClick.call(this,this._getMouseCoords(e));
     },
 
     /**
