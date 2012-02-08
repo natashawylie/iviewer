@@ -72,6 +72,11 @@ mouseProto._mouseInit = function() {
     _mouseInit.apply(this);
 }
 
+/**
+ * Simple implementation of jQuery like getters/setters
+ * var val = something();
+ * something(val);
+ */
 var setter = function(setter, getter) {
     return function(val) {
         if (arguments.length === 0) {
@@ -82,6 +87,10 @@ var setter = function(setter, getter) {
     }
 };
 
+/**
+ * Internet explorer rotates image relative left top corner, so we should
+ * shift image when it's rotated.
+ */
 var ieTransforms = {
         '0': {
             marginLeft: 0,
@@ -109,6 +118,13 @@ var ieTransforms = {
     },
     useIeTransforms = (jQuery.browser.msie && parseInt(jQuery.browser.version, 10) <= 8);
 
+
+/**
+ * @class ImageObject Class represents image and provides public api without
+ *     extending image prototype.
+ * @constructor
+ * @param {boolean} do_anim Do we want to animate image on dimension changes?
+ */
 var ImageObject = function(do_anim) {
     this._img = $("<img>")
             //this is needed, because chromium sets them auto otherwise
@@ -122,12 +138,20 @@ var ImageObject = function(do_anim) {
     this.angle(0);
 };
 
+
+/** @lends ImageObject.prototype */
 (function() {
-    this.reset = function(w, h) {
+    /**
+     * Restore initial object state.
+     *
+     * @param {number} w Image width.
+     * @param {number} h Image height.
+     */
+    this._reset = function(w, h) {
         this._angle = 0;
         this._swapDimensions = false;
-        this.x(0)
-        this.y(0)
+        this.x(0);
+        this.y(0);
 
         this.orig_width(w);
         this.orig_height(h);
@@ -135,8 +159,19 @@ var ImageObject = function(do_anim) {
         this.display_height(h);
     };
 
+    /**
+     * Check if image is loaded.
+     *
+     * @return {boolean}
+     */
     this.loaded = function() { return this._loaded; };
 
+    /**
+     * Load image.
+     *
+     * @param {string} src Image url.
+     * @param {Function=} loaded Function will be called on image load.
+     */
     this.load = function(src, loaded) {
         var self = this;
 
@@ -151,7 +186,7 @@ var ImageObject = function(do_anim) {
             .css({ position: "absolute", top :"0px", left: "0px"})
             .one('load', function(){
                 self._loaded = true;
-                self.reset(this.width, this.height);
+                self._reset(this.width, this.height);
                 loaded();
 
             })
@@ -164,22 +199,32 @@ var ImageObject = function(do_anim) {
             vert = '_' + prefix + '_' + (name === 'height' ? 'width' : 'height');
         return setter(function(val) {
                 this[this._swapDimensions ? horiz: vert] = val;
-                // if (useIeTransforms && prefix === 'display') {
-                //     var prop = 'margin' + ( name === 'width' ? 'Left': 'Top');
-                //     this._img.css(prop, ieTransforms[this.angle()][prop] * this.display_diff() / 2);
-                // }
             },
             function() {
                 return this[this._swapDimensions ? horiz: vert];
             });
     };
 
+    /**
+     * Getters and setter for common image dimensions.
+     *    display_ means real image tag dimensions
+     *    orig_ means physical image dimensions.
+     *  Note, that dimensions are swapped if image is rotated. It necessary,
+     *  because as little as possible code should know about rotation.
+     */
     this.display_width = this._dimension('display', 'width'),
     this.display_height = this._dimension('display', 'height'),
     this.display_diff = function() { return Math.floor( this.display_width() - this.display_height() ) };
     this.orig_width = this._dimension('orig', 'width'),
     this.orig_height = this._dimension('orig', 'height'),
 
+    /**
+     * Setter for  X coordinate. If image is rotated we need to additionaly shift an
+     *     image to map image coordinate to the visual position.
+     *
+     * @param {number} val Coordinate value.
+     * @param {boolean} skipCss If true, we only set the value and do not touch the dom.
+     */
     this.x = setter(function(val, skipCss) { 
             this._x = val;
             if (!skipCss) {
@@ -190,6 +235,13 @@ var ImageObject = function(do_anim) {
             return this._x;
         });
 
+    /**
+     * Setter for  Y coordinate. If image is rotated we need to additionaly shift an
+     *     image to map image coordinate to the visual position.
+     *
+     * @param {number} val Coordinate value.
+     * @param {boolean} skipCss If true, we only set the value and do not touch the dom.
+     */
     this.y = setter(function(val, skipCss) {
             this._y = val;
             if (!skipCss) {
@@ -200,6 +252,11 @@ var ImageObject = function(do_anim) {
             return this._y;
        });
 
+    /**
+     * Perform image rotation.
+     *
+     * @param {number} deg Absolute image angle. The method will work with values 0, 90, 180, 270 degrees.
+     */
     this.angle = setter(function(deg) {
             var prevSwap = this._swapDimensions;
 
@@ -232,15 +289,34 @@ var ImageObject = function(do_anim) {
         },
        function() { return this._angle; });
 
+    /**
+     * Map point in the container coordinates to the point in image coordinates.
+     *     You will get coordinates of point on image with respect to rotation,
+     *     but will be set as if image was not rotated.
+     *     So, if image was rotated 90 degrees, it's (0,0) point will be on the
+     *     top right corner.
+     *
+     * @param {x: number, y: number} point Point in container coordinates.
+     * @return  {x: number, y: number}
+     */
     this.toOriginalCoords = function(point) {
         switch (this.angle()) {
-            case 0: return { origx: point.x, origy: point.y }
-            case 90: return { origx: point.y, origy: this.display_width() - point.x }
-            case 180: return { origx: this.display_width() - point.x, origy: this.display_height() - point.y }
-            case 270: return { origx: this.display_height() - point.y, origy: point.x }
+            case 0: return { x: point.x, y: point.y }
+            case 90: return { x: point.y, y: this.display_width() - point.x }
+            case 180: return { x: this.display_width() - point.x, y: this.display_height() - point.y }
+            case 270: return { x: this.display_height() - point.y, y: point.x }
         }
     };
 
+    /**
+     * Map point in the image coordinates to the point in container coordinates.
+     *     You will get coordinates of point on container with respect to rotation.
+     *     Note, if image was rotated 90 degrees, it's (0,0) point will be on the
+     *     top right corner.
+     *
+     * @param {x: number, y: number} point Point in container coordinates.
+     * @return  {x: number, y: number}
+     */
     this.toRealCoords = function(point) {
         switch (this.angle()) {
             case 0: return { x: this.x() + point.x, y: this.y() + point.y }
@@ -250,9 +326,23 @@ var ImageObject = function(do_anim) {
         }
     };
 
+    /**
+     * @return {jQuery} Return image node. this is needed to add event handlers.
+     */
     this.object = setter(jQuery.noop,
                            function() { return this._img; });
 
+    /**
+     * Change image properties.
+     *
+     * @param {number} disp_w Display width;
+     * @param {number} disp_h Display height;
+     * @param {number} x
+     * @param {number} y
+     * @param {boolean} skip_animation If true, the animation will be skiped despite the
+     *     value set in constructor.
+     * @param {Function=} complete Call back will be fired when zoom will be complete.
+     */
     this.setImageProps = function(disp_w, disp_h, x, y, skip_animation, complete) {
         complete = complete || jQuery.noop;
 
@@ -311,7 +401,7 @@ var ImageObject = function(do_anim) {
             });
         } else {
             this._img.css(params);
-            complete();
+            setTimeout(complete, 0); //both if branches should behave equally.
         }
     };
 
@@ -614,8 +704,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         coords = this.img_object.toOriginalCoords(coords);
 
-        return { x :  util.descaleValue(coords.origx, this.current_zoom),
-                 y :  util.descaleValue(coords.origy, this.current_zoom)
+        return { x :  util.descaleValue(coords.x, this.current_zoom),
+                 y :  util.descaleValue(coords.y, this.current_zoom)
         };
     },
 
