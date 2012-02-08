@@ -52,14 +52,10 @@
 
 .iviewer_rotate_left {
     left: 227px;
-    font-size: 28px;
-    text-align: center;
-    background-color: #fff;
+    background: #fff url(img/iviewer.rotate_left.png) center center no-repeat;
 }
 
 .iviewer_rotate_right {
     left: 262px;
-    font-size: 28px;
-    text-align: center;
-    background-color: #fff;
+    background: #fff url(img/iviewer.rotate_right.png) center center no-repeat;
 }

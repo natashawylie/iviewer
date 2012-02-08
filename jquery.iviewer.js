@@ -164,10 +164,10 @@ var ImageObject = function(do_anim) {
             vert = '_' + prefix + '_' + (name === 'height' ? 'width' : 'height');
         return setter(function(val) {
                 this[this._swapDimensions ? horiz: vert] = val;
-                if (useIeTransforms && prefix === 'display') {
-                    var prop = 'margin' + ( name === 'width' ? 'Left': 'Top');
-                    this._img.css(prop, ieTransforms[this.angle()][prop] * this.display_diff() / 2);
-                }
+                // if (useIeTransforms && prefix === 'display') {
+                //     var prop = 'margin' + ( name === 'width' ? 'Left': 'Top');
+                //     this._img.css(prop, ieTransforms[this.angle()][prop] * this.display_diff() / 2);
+                // }
             },
             function() {
                 return this[this._swapDimensions ? horiz: vert];
@@ -255,6 +255,7 @@ var ImageObject = function(do_anim) {
 
     this.setImageProps = function(disp_w, disp_h, x, y, skip_animation, complete) {
         complete = complete || jQuery.noop;
+
         this.display_width(disp_w);
         this.display_height(disp_h);
         this.x(x, true);
@@ -270,8 +271,44 @@ var ImageObject = function(do_anim) {
             left: x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px" 
         };
 
+        if (useIeTransforms) {
+            jQuery.extend(params, {
+                marginLeft: ieTransforms[this.angle()].marginLeft * this.display_diff() / 2,
+                marginTop: ieTransforms[this.angle()].marginTop * this.display_diff() / 2
+            });
+        }
+
+        var swapDims = this._swapDimensions,
+            img = this._img;
+
+        //here we come: another IE oddness. If image is rotated 90 degrees with a filter, than
+        //width and height getters return real width and height of rotated image. The bad news
+        //is that to set height you need to set a width and vice versa. Fuck IE.
+        //So, in this case we have to animate width and height manually.
+        if(useIeTransforms && swapDims) {
+            var ieh = this._img.width(),
+                iew = this._img.height(),
+                iedh = params.height - ieh;
+                iedw = params.width - iew;
+
+            delete params.width;
+            delete params.height;
+        }
+
         if (this._do_anim && !skip_animation) {
-            this._img.animate(params, 200, complete);
+            this._img.animate(params, {
+                duration: 200, 
+                complete: complete,
+                step: function(now, fx) {
+                    if(useIeTransforms && swapDims && (fx.prop === 'top')) {
+                        var percent = (now - fx.start) / (fx.end - fx.start);
+
+                        img.height(ieh + iedh * percent);
+                        img.width(iew + iedw * percent);
+                        img.css('top', now);
+                    }
+                }
+            });
         } else {
             this._img.css(params);
             complete();
@@ -830,30 +867,30 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     {
         var me=this;
 
-        $("<div>", { class: "iviewer_zoom_in iviewer_common iviewer_button"})
+        $("<div>", { 'class': "iviewer_zoom_in iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.zoom_by(1); return false;})
                     .appendTo(this.container);
 
-        $("<div>", { class: "iviewer_zoom_out iviewer_common iviewer_button"})
+        $("<div>", { 'class': "iviewer_zoom_out iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.zoom_by(- 1); return false;})
                     .appendTo(this.container);
 
-        $("<div>", { class: "iviewer_zoom_zero iviewer_common iviewer_button"})
+        $("<div>", { 'class': "iviewer_zoom_zero iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.set_zoom(100); return false;})
                     .appendTo(this.container);
 
-        $("<div>", { class: "iviewer_zoom_fit iviewer_common iviewer_button"})
+        $("<div>", { 'class': "iviewer_zoom_fit iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.fit(this); return false;})
                     .appendTo(this.container);
 
         this.zoom_object = $("<div>").addClass("iviewer_zoom_status iviewer_common")
                                     .appendTo(this.container);
 
-        $("<div>", { html: '↶', class: "iviewer_rotate_left iviewer_common iviewer_button"})
+        $("<div>", { 'class': "iviewer_rotate_left iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.angle(-90); return false;})
                     .appendTo(this.container);
 
-        $("<div>", { html: '↷', class: "iviewer_rotate_right iviewer_common iviewer_button" })
+        $("<div>", { 'class': "iviewer_rotate_right iviewer_common iviewer_button" })
                     .bind('mousedown touchstart',function(){me.angle(90); return false;})
                     .appendTo(this.container);
 
