@@ -1,14 +1,14 @@
 /*
- * iviewer Plugin for jQuery JavaScript Library
+ * iviewer Widget for jQuery UI
  * https://github.com/can3p/iviewer
  *
- * Copyright (c) 2009 - 2011 Dmitry Petrov
+ * Copyright (c) 2009 - 2012 Dmitry Petrov
  * Dual licensed under the MIT and GPL licenses.
  *  - http://www.opensource.org/licenses/mit-license.php
  *  - http://www.gnu.org/copyleft/gpl.html
  *
  * Author: Dmitry Petrov
- * Version: 0.5.3
+ * Version: 0.6
  */
 
 ( function( $, undefined ) {
@@ -296,8 +296,8 @@ var ImageObject = function(do_anim) {
      *     So, if image was rotated 90 degrees, it's (0,0) point will be on the
      *     top right corner.
      *
-     * @param {x: number, y: number} point Point in container coordinates.
-     * @return  {x: number, y: number}
+     * @param {{x: number, y: number}} point Point in container coordinates.
+     * @return  {{x: number, y: number}}
      */
     this.toOriginalCoords = function(point) {
         switch (this.angle()) {
@@ -314,8 +314,8 @@ var ImageObject = function(do_anim) {
      *     Note, if image was rotated 90 degrees, it's (0,0) point will be on the
      *     top right corner.
      *
-     * @param {x: number, y: number} point Point in container coordinates.
-     * @return  {x: number, y: number}
+     * @param {{x: number, y: number}} point Point in container coordinates.
+     * @return  {{x: number, y: number}}
      */
     this.toRealCoords = function(point) {
         switch (this.angle()) {
@@ -501,7 +501,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         *   @img_object.display_{width|height} - actual dimensions
         */
         this.img_object = {};
-        this.img_object
 
         this.zoom_object = {}; //object to show zoom status
 
