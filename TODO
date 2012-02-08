@@ -1,1 +1,2 @@
-* convertions matrices are spread all over the file, try to remove duplications.
+* Make smooth zooming without visual discrete steps
+
