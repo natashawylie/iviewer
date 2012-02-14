@@ -1,3 +1,11 @@
+Version 0.6.1
+
+* all callbacks are now fired with _trigger method of jQuery UI. So the first
+  parameter in every callback now is a jquery event. Other arguments are
+  shifted. Also, this now point to the html element, not the widget object
+  itself.
+* Added info method to access some image properties from outside world
+
 Version 0.6
 
 * Changelog file (eventually)

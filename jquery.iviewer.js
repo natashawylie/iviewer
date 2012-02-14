@@ -890,6 +890,39 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     /**
+     * Get some information about the image.
+     *     Currently orig_(width|height), display_(width|height), angle, zoom and src params are supported.
+     *
+     *  @param {string} parameter to check
+     *  @param {boolean} withoutRotation if param is orig_width or orig_height and this flag is set to true,
+     *      method will return original image width without considering rotation.
+     *
+     */
+    info: function(param, withoutRotation) {
+        if (!param) { return; }
+
+        switch (param) {
+            case 'orig_width':
+            case 'orig_height':
+                if (withoutRotation) {
+                    return (this.img_object.angle() % 180 === 0 ? this.img_object[param]() :
+                            param === 'orig_width' ? this.img_object.orig_height() : 
+                                                        this.img_object.orig_width());
+                } else {
+                    return this.img_object[param]();
+                }
+            case 'display_width':
+            case 'display_height':
+            case 'angle':
+                return this.img_object[param]();
+            case 'zoom':
+                return this.current_zoom;
+            case 'src':
+                return this.img_object.object().attr('src');
+        }
+    },
+
+    /**
     *   callback for handling mousdown event to start dragging image
     **/
     _mouseStart: function( e )
