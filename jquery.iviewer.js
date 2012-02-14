@@ -532,7 +532,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         //init object
         this.img_object.object()
             //bind mouse events
-            .click(function(e){return me.click(e)})
+            .click(function(e){return me._click(e)})
             .mousewheel(function(ev, delta)
             {
                 //this event is there instead of containing div, because
@@ -572,9 +572,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.current_zoom = this.options.zoom;
         var me = this;
 
-        if(this.options.onStartLoad) {
-           this.options.onStartLoad.call(this);
-        }
+        this._trigger('onStartLoad');
 
         this.img_object.load(src, function() {
                 me.container.addClass("iviewer_cursor");
@@ -588,7 +586,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
                 if(me.options.onFinishLoad)
                 {
-                   me.options.onFinishLoad.call(me);
+                    me._trigger('onFinishLoad');
                 }
         });
     },
@@ -747,8 +745,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     set_zoom: function(new_zoom, skip_animation)
     {
-        if(this.options.onZoom.call(this, new_zoom) == false)
-        {
+        if (this._trigger('onZoom', 0, new_zoom) == false) {
             return;
         }
 
@@ -792,7 +789,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this.img_object.setImageProps(new_width, new_height, coords.x, coords.y,
                                         skip_animation, function() {
-            self.options.onAfterZoom.call( this, new_zoom );
+            self._trigger('onAfterZoom', 0, new_zoom );
         });
         this.current_zoom = new_zoom;
 
@@ -846,6 +843,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         //the rotate behavior is different in all editors. For now we  just center the
         //image. However, it will be better to try to keep the position.
         this.center();
+        this._trigger('angle', 0, this.img_object.angle());
     },
 
     /**
@@ -896,8 +894,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     _mouseStart: function( e )
     {
-        if (this.options.onStartDrag.call(this,this._getMouseCoords(e)) == false)
-        {
+        $.ui.mouse.prototype._mouseStart.call(this, e);
+        if (this._trigger('onStartDrag', 0, this._getMouseCoords(e)) === false) {
             return false;
         }
 
@@ -919,20 +917,20 @@ $.widget( "ui.iviewer", $.ui.mouse, {
      *  @param {jQuery.Event} e
      */
     _handleMouseMove: function(e) {
-        this.options.onMouseMove.call(this, this._getMouseCoords(e));
+        this._trigger('onMouseMove', 0, this._getMouseCoords(e));
     },
 
     /**
-    *   callback for handling mousmove event to drag image
+    *   callback for handling mousemove event to drag image
     **/
     _mouseDrag: function(e)
     {
-        this.options.onDrag.call(this, this._getMouseCoords(e));
-
+        $.ui.mouse.prototype._mouseDrag.call(this, e);
         var ltop =  e.pageY - this.dy;
         var lleft = e.pageX - this.dx;
 
         this.setCoords(lleft, ltop);
+        this._trigger('onDrag', 0, this._getMouseCoords(e));
         return false;
     },
 
@@ -941,12 +939,14 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     _mouseStop: function(e)
     {
+        $.ui.mouse.prototype._mouseStop.call(this, e);
         this.container.removeClass("iviewer_drag_cursor");
+        this._trigger('onStopDrag', 0, this._getMouseCoords(e));
     },
 
-    click: function(e)
+    _click: function(e)
     {
-        this.options.onClick.call(this,this._getMouseCoords(e));
+        this._trigger('onClick', 0, this._getMouseCoords(e));
     },
 
     /**
