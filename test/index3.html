@@ -66,7 +66,7 @@
                 viewer = $("#viewer1").iviewer({
                     src: "test_active_with_objects.GIF",
 
-                    onClick: function(coords) {
+                    onClick: function(ev, coords) {
                         var object = whereIam(coords.x, coords.y);
                         
                         if (object) 

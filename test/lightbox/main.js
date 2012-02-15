@@ -6,7 +6,7 @@
             iviewer({
                 ui_disabled : true,
                 zoom : 'fit',
-                onFinishLoad : function() {
+                onFinishLoad : function(ev) {
                     $("#iviewer .loader").fadeOut();
                     $("#iviewer .viewer").fadeIn();
                 }
