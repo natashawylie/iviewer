@@ -792,7 +792,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this.img_object.setImageProps(new_width, new_height, coords.x, coords.y,
                                         skip_animation, function() {
-            self.options.onAfterZoom.call( this, new_zoom );
+            self.options.onAfterZoom.call( self, new_zoom );
         });
         this.current_zoom = new_zoom;
 
