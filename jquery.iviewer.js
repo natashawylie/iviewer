@@ -546,9 +546,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             })
             .prependTo(this.container);
 
-        if (this.options.onMouseMove !== jQuery.noop) {
-            this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
-        }
+        this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
 
         this.loadImage(this.options.src);
 
@@ -575,7 +573,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.current_zoom = this.options.zoom;
         var me = this;
 
-        this._trigger('onStartLoad');
+        this._trigger('onStartLoad', 0, src);
 
         this.img_object.load(src, function() {
                 me.container.addClass("iviewer_cursor");
@@ -589,7 +587,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
                 if(me.options.onFinishLoad)
                 {
-                    me._trigger('onFinishLoad');
+                    me._trigger('onFinishLoad', 0, src);
                 }
         });
     },
@@ -953,7 +951,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
      *  @param {jQuery.Event} e
      */
     _handleMouseMove: function(e) {
-        this._trigger('onMouseMove', 0, this._getMouseCoords(e));
+        this._trigger('onMouseMove', e.originalEvent, this._getMouseCoords(e));
     },
 
     /**
@@ -966,7 +964,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         var lleft = e.pageX - this.dx;
 
         this.setCoords(lleft, ltop);
-        this._trigger('onDrag', 0, this._getMouseCoords(e));
+        this._trigger('onDrag', e.originalEvent, this._getMouseCoords(e));
         return false;
     },
 
