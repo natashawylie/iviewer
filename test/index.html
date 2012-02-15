@@ -14,9 +14,9 @@
                        src: "test_image.jpg", 
                        update_on_resize: false,
                        zoom_animation: false,
-                       onMouseMove: function(coords) { },
-                       onStartDrag: function(coords) { return false; }, //this image will not be dragged
-                       onDrag: function(coords) { }
+                       onMouseMove: function(ev, coords) { },
+                       onStartDrag: function(ev, coords) { return false; }, //this image will not be dragged
+                       onDrag: function(ev, coords) { }
                   });
 
                    $("#in").click(function(){ iv1.iviewer('zoom_by', 1); }); 

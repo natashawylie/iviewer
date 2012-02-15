@@ -178,20 +178,23 @@ var ImageObject = function(do_anim) {
         loaded = loaded || jQuery.noop;
         this._loaded = false;
 
+        //If we assign new image url to the this._img IE9 fires onload event and image width and
+        //height are set to zero. So, we create another image object and load image through it.
+        var img = new Image();
+        img.onload = function() {
+            self._loaded = true;
+            self._reset(this.width, this.height);
+            self._img.prop('src', src);
+            loaded();
+        };
+        img.src = src;
+
         this._img
             .removeAttr("src")
             .removeAttr("width")
             .removeAttr("height")
             .removeAttr("style")
             .css({ position: "absolute", top :"0px", left: "0px"})
-            .one('load', function(){
-                self._loaded = true;
-                self._reset(this.width, this.height);
-                loaded();
-
-            })
-            //src attribute is after setting load event, or it won't work
-            .attr("src",src);
     };
 
     this._dimension = function(prefix, name) {

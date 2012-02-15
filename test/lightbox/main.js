@@ -1,26 +1,14 @@
 (function($) {
-    function open(src) {
-        var firstZoom = true;
-
-        $("#iviewer").fadeIn().trigger('fadein');
-
+    function init() {
         var viewer = $("#iviewer .viewer").
             width($(window).width() - 80).
             height($(window).height()).
             iviewer({
-                src : src,
                 ui_disabled : true,
                 zoom : 'fit',
-                initCallback : function() {
-                    var self = this;
-
-                },
-                onZoom : function() {
-                    if (!firstZoom) return;
-
+                onFinishLoad : function() {
                     $("#iviewer .loader").fadeOut();
                     $("#iviewer .viewer").fadeIn();
-                    firstZoom = true;
                 }
             }
         );
@@ -36,11 +24,21 @@
         });
     }
 
+    function open(src) {
+        $("#iviewer").fadeIn().trigger('fadein');
+        $("#iviewer .loader").show();
+        $("#iviewer .viewer").hide();
+
+        var viewer = $("#iviewer .viewer")
+            .iviewer('loadImage', src)
+            .iviewer('set_zoom', 'fit');
+    }
+
     function close() {
         $("#iviewer").fadeOut().trigger('fadeout');
     }
 
-    $('#go').click(function(e) {
+    $('.go').click(function(e) {
         e.preventDefault();
         var src = $(this).attr('href');
         open(src);
@@ -56,4 +54,6 @@
             if (e.which == 27) close();
         });
     });
+
+    init();
 })(jQuery);

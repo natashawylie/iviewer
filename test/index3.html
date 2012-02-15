@@ -73,7 +73,7 @@
                             alert('Clicked at ('+coords.x+', '+coords.y+'). This is '+object.title);
                     },
 
-                    onMouseMove: function(coords) {
+                    onMouseMove: function(ev, coords) {
                         var object = whereIam(coords.x, coords.y);
                         
                         if (object) {
@@ -85,7 +85,7 @@
                         }                            
                     },
                     
-                    onBeforeDrag: function(coords) {
+                    onBeforeDrag: function(ev, coords) {
                         // remove pointer if image is getting moving
                         // because it's not actual anymore
                         $('#pointer').css('display', 'none');
@@ -93,13 +93,13 @@
                         return whereIam(coords.x, coords.y) ? false : true;     
                     },
                     
-                    onZoom: function() {
+                    onZoom: function(ev) {
                         // remove pointer if image is resizing
                         // because it's not actual anymore
                         $('#pointer').css('display', 'none');
                     },
                     
-                    initCallback: function() {
+                    initCallback: function(ev) {
                         this.container.context.iviewer = this;
                     }
                 });
