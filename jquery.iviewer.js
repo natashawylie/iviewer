@@ -118,14 +118,624 @@ var ieTransforms = {
     },
     useIeTransforms = (jQuery.browser.msie && parseInt(jQuery.browser.version, 10) <= 8);
 
+$.widget( "ui.iviewer", $.ui.mouse, {
+    widgetEventPrefix: "iviewer",
+    options : {
+        /**
+        * start zoom value for image, not used now
+        * may be equal to "fit" to fit image into container or scale in %
+        **/
+        zoom: "fit",
+        /**
+        * base value to scale image
+        **/
+        zoom_base: 100,
+        /**
+        * maximum zoom
+        **/
+        zoom_max: 800,
+        /**
+        * minimum zoom
+        **/
+        zoom_min: 25,
+        /**
+        * base of rate multiplier.
+        * zoom is calculated by formula: zoom_base * zoom_delta^rate
+        **/
+        zoom_delta: 1.4,
+        /**
+        * whether the zoom should be animated.
+        */
+        zoom_animation: true,
+        /**
+        * if true plugin doesn't add its own controls
+        **/
+        ui_disabled: false,
+        /**
+        * if false, plugin doesn't bind resize event on window and this must
+        * be handled manually
+        **/
+        update_on_resize: true,
+        /**
+        * event is triggered when zoom value is changed
+        * @param int new zoom value
+        * @return boolean if false zoom action is aborted
+        **/
+        onZoom: jQuery.noop,
+        /**
+        * event is triggered when zoom value is changed after image is set to the new dimensions
+        * @param int new zoom value
+        * @return boolean if false zoom action is aborted
+        **/
+        onAfterZoom: jQuery.noop,
+        /**
+        * event is fired on drag begin
+        * @param object coords mouse coordinates on the image
+        * @return boolean if false is returned, drag action is aborted
+        **/
+        onStartDrag: jQuery.noop,
+        /**
+        * event is fired on drag action
+        * @param object coords mouse coordinates on the image
+        **/
+        onDrag: jQuery.noop,
+        /**
+        * event is fired when mouse moves over image
+        * @param object coords mouse coordinates on the image
+        **/
+        onMouseMove: jQuery.noop,
+        /**
+        * mouse click event
+        * @param object coords mouse coordinates on the image
+        **/
+        onClick: jQuery.noop,
+        /**
+        * event is fired when image starts to load
+        */
+        onStartLoad: null,
+        /**
+        * event is fired, when image is loaded and initially positioned
+        */
+        onFinishLoad: null
+    },
+
+    _create: function() {
+        var me = this;
+
+        //drag variables
+        this.dx = 0;
+        this.dy = 0;
+
+        /* object containing actual information about image
+        *   @img_object.object - jquery img object
+        *   @img_object.orig_{width|height} - original dimensions
+        *   @img_object.display_{width|height} - actual dimensions
+        */
+        this.img_object = {};
+
+        this.zoom_object = {}; //object to show zoom status
+
+        this._angle = 0;
+
+        this.current_zoom = this.options.zoom;
+
+        if(this.options.src === null){
+            return;
+        }
+
+        this.container = this.element;
+
+        this._updateContainerInfo();
+
+        //init container
+        this.container.css("overflow","hidden");
+
+        if(this.options.update_on_resize == true)
+        {
+            $(window).resize(function()
+            {
+                me._updateContainerInfo();
+            });
+        }
+
+        this.img_object = new $.ui.iviewer.ImageObject(this.options.zoom_animation);
+
+        //init object
+        this.img_object.object()
+            //bind mouse events
+            .click(function(e){return me._click(e)})
+            .mousewheel(function(ev, delta)
+            {
+                //this event is there instead of containing div, because
+                //at opera it triggers many times on div
+                var zoom = (delta > 0)?1:-1;
+                me.zoom_by(zoom);
+                return false;
+            })
+            .prependTo(this.container);
+
+        this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
+
+        this.loadImage(this.options.src);
+
+        if(!this.options.ui_disabled)
+        {
+            this.createui();
+        }
+
+        this._mouseInit();
+    },
+
+    destroy: function() {
+        this._mouseDestroy();
+    },
+
+    _updateContainerInfo: function()
+    {
+        this.options.height = this.container.height();
+        this.options.width = this.container.width();
+    },
+
+    loadImage: function( src )
+    {
+        this.current_zoom = this.options.zoom;
+        var me = this;
+
+        this._trigger('onStartLoad', 0, src);
+
+        this.img_object.load(src, function() {
+                me.container.addClass("iviewer_cursor");
+
+                if(me.options.zoom == "fit"){
+                    me.fit(true);
+                }
+                else {
+                    me.set_zoom(me.options.zoom, true);
+                }
+
+                if(me.options.onFinishLoad)
+                {
+                    me._trigger('onFinishLoad', 0, src);
+                }
+        });
+    },
+
+    /**
+    * fits image in the container
+    *
+    * @param {boolean} skip_animation
+    **/
+    fit: function(skip_animation)
+    {
+        var aspect_ratio = this.img_object.orig_width() / this.img_object.orig_height();
+        var window_ratio = this.options.width /  this.options.height;
+        var choose_left = (aspect_ratio > window_ratio);
+        var new_zoom = 0;
+
+        if(choose_left){
+            new_zoom = this.options.width / this.img_object.orig_width() * 100;
+        }
+        else {
+            new_zoom = this.options.height / this.img_object.orig_height() * 100;
+        }
+
+      this.set_zoom(new_zoom, skip_animation);
+    },
+
+    /**
+    * center image in container
+    **/
+    center: function()
+    {
+        this.setCoords(-Math.round((this.img_object.display_width() - this.options.width)/2),
+                -Math.round((this.img_object.display_height() - this.options.height)/2));
+    },
+
+    /**
+    *   move a point in container to the center of display area
+    *   @param x a point in container
+    *   @param y a point in container
+    **/
+    moveTo: function(x, y)
+    {
+        var dx = x-Math.round(this.options.width/2);
+        var dy = y-Math.round(this.options.height/2);
+
+        var new_x = this.img_object.x() - dx;
+        var new_y = this.img_object.y() - dy;
+
+        this.setCoords(new_x, new_y);
+    },
+
+    /**
+     * Get container offset object.
+     */
+    getContainerOffset: function() {
+        return jQuery.extend({}, this.container.offset());
+    },
+
+    /**
+    * set coordinates of upper left corner of image object
+    **/
+    setCoords: function(x,y)
+    {
+        //do nothing while image is being loaded
+        if(!this.img_object.loaded()) { return; }
+
+        var coords = this._correctCoords(x,y);
+        this.img_object.x(coords.x);
+        this.img_object.y(coords.y);
+    },
+
+    _correctCoords: function( x, y )
+    {
+        x = parseInt(x, 10);
+        y = parseInt(y, 10);
+
+        //check new coordinates to be correct (to be in rect)
+        if(y > 0){
+            y = 0;
+        }
+        if(x > 0){
+            x = 0;
+        }
+        if(y + this.img_object.display_height() < this.options.height){
+            y = this.options.height - this.img_object.display_height();
+        }
+        if(x + this.img_object.display_width() < this.options.width){
+            x = this.options.width - this.img_object.display_width();
+        }
+        if(this.img_object.display_width() <= this.options.width){
+            x = -(this.img_object.display_width() - this.options.width)/2;
+        }
+        if(this.img_object.display_height() <= this.options.height){
+            y = -(this.img_object.display_height() - this.options.height)/2;
+        }
+
+        return { x: x, y:y };
+    },
+
+
+    /**
+    * convert coordinates on the container to the coordinates on the image (in original size)
+    *
+    * @return object with fields x,y according to coordinates or false
+    * if initial coords are not inside image
+    **/
+    containerToImage : function (x,y)
+    {
+        var coords = { x : x - this.img_object.x(),
+                 y :  y - this.img_object.y()
+        };
+
+        coords = this.img_object.toOriginalCoords(coords);
+
+        return { x :  util.descaleValue(coords.x, this.current_zoom),
+                 y :  util.descaleValue(coords.y, this.current_zoom)
+        };
+    },
+
+    /**
+    * convert coordinates on the image (in original size, and zero angle) to the coordinates on the container
+    *
+    * @return object with fields x,y according to coordinates
+    **/
+    imageToContainer : function (x,y)
+    {
+        var coords = {
+                x : util.scaleValue(x, this.current_zoom),
+                y : util.scaleValue(y, this.current_zoom)
+            };
+
+        return this.img_object.toRealCoords(coords);
+    },
+
+    /**
+    * get mouse coordinates on the image
+    * @param e - object containing pageX and pageY fields, e.g. mouse event object
+    *
+    * @return object with fields x,y according to coordinates or false
+    * if initial coords are not inside image
+    **/
+    _getMouseCoords : function(e)
+    {
+        var containerOffset = this.container.offset();
+            coords = this.containerToImage(e.pageX - containerOffset.left, e.pageY - containerOffset.top);
+
+        return coords;
+    },
+
+    /**
+    * set image scale to the new_zoom
+    *
+    * @param {number} new_zoom image scale in %
+    * @param {boolean} skip_animation
+    **/
+    set_zoom: function(new_zoom, skip_animation)
+    {
+        if (this._trigger('onZoom', 0, new_zoom) == false) {
+            return;
+        }
+
+        //do nothing while image is being loaded
+        if(!this.img_object.loaded()) { return; }
+
+        if(new_zoom <  this.options.zoom_min)
+        {
+            new_zoom = this.options.zoom_min;
+        }
+        else if(new_zoom > this.options.zoom_max)
+        {
+            new_zoom = this.options.zoom_max;
+        }
+
+        /* we fake these values to make fit zoom properly work */
+        if(this.current_zoom == "fit")
+        {
+            var old_x = Math.round(this.options.width/2 + this.img_object.orig_width()/2);
+            var old_y = Math.round(this.options.height/2 + this.img_object.orig_height()/2);
+            this.current_zoom = 100;
+        }
+        else {
+            var old_x = -this.img_object.x() + Math.round(this.options.width/2);
+            var old_y = -this.img_object.y() + Math.round(this.options.height/2);
+        }
+
+        var new_width = util.scaleValue(this.img_object.orig_width(), new_zoom);
+        var new_height = util.scaleValue(this.img_object.orig_height(), new_zoom);
+        var new_x = util.scaleValue( util.descaleValue(old_x, this.current_zoom), new_zoom);
+        var new_y = util.scaleValue( util.descaleValue(old_y, this.current_zoom), new_zoom);
+
+        new_x = this.options.width/2 - new_x;
+        new_y = this.options.height/2 - new_y;
+
+        this.img_object.display_width(new_width);
+        this.img_object.display_height(new_height);
+
+        var coords = this._correctCoords( new_x, new_y ),
+            self = this;
+
+        this.img_object.setImageProps(new_width, new_height, coords.x, coords.y,
+                                        skip_animation, function() {
+            self._trigger('onAfterZoom', 0, new_zoom );
+        });
+        this.current_zoom = new_zoom;
+
+        this.update_status();
+    },
+
+    /**
+    * changes zoom scale by delta
+    * zoom is calculated by formula: zoom_base * zoom_delta^rate
+    * @param Integer delta number to add to the current multiplier rate number
+    **/
+    zoom_by: function(delta)
+    {
+        var closest_rate = this.find_closest_zoom_rate(this.current_zoom);
+
+        var next_rate = closest_rate + delta;
+        var next_zoom = this.options.zoom_base * Math.pow(this.options.zoom_delta, next_rate)
+        if(delta > 0 && next_zoom < this.current_zoom)
+        {
+            next_zoom *= this.options.zoom_delta;
+        }
+
+        if(delta < 0 && next_zoom > this.current_zoom)
+        {
+            next_zoom /= this.options.zoom_delta;
+        }
+
+        this.set_zoom(next_zoom);
+    },
+
+    /**
+    * Rotate image
+    * @param {num} deg Degrees amount to rotate. Positive values rotate image clockwise.
+    *     Currently 0, 90, 180, 270 and -90, -180, -270 values are supported
+    *
+    * @param {boolean} abs If the flag is true if, the deg parameter will be considered as
+    *     a absolute value and relative otherwise.
+    * @return {num|null} Method will return current image angle if called without any arguments.
+    **/
+    angle: function(deg, abs) {
+        if (arguments.length === 0) { return this.img_object.angle(); }
+
+        if (deg < -270 || deg > 270 || deg % 90 !== 0) { return; }
+        if (!abs) { deg += this.img_object.angle(); }
+        if (deg < 0) { deg += 360; }
+        if (deg >= 360) { deg -= 360; }
+
+        if (deg === this.img_object.angle()) { return; }
+
+        this.img_object.angle(deg);
+        //the rotate behavior is different in all editors. For now we  just center the
+        //image. However, it will be better to try to keep the position.
+        this.center();
+        this._trigger('angle', 0, { angle: this.img_object.angle() });
+    },
+
+    /**
+    * finds closest multiplier rate for value
+    * basing on zoom_base and zoom_delta values from settings
+    * @param Number value zoom value to examine
+    **/
+    find_closest_zoom_rate: function(value)
+    {
+        if(value == this.options.zoom_base)
+        {
+            return 0;
+        }
+
+        function div(val1,val2) { return val1 / val2 };
+        function mul(val1,val2) { return val1 * val2 };
+
+        var func = (value > this.options.zoom_base)?mul:div;
+        var sgn = (value > this.options.zoom_base)?1:-1;
+
+        var mltplr = this.options.zoom_delta;
+        var rate = 1;
+
+        while(Math.abs(func(this.options.zoom_base, Math.pow(mltplr,rate)) - value) >
+              Math.abs(func(this.options.zoom_base, Math.pow(mltplr,rate+1)) - value))
+        {
+            rate++;
+        }
+
+        return sgn * rate;
+    },
+
+    /* update scale info in the container */
+    update_status: function()
+    {
+        if(!this.options.ui_disabled)
+        {
+            var percent = Math.round(100*this.img_object.display_height()/this.img_object.orig_height());
+            if(percent)
+            {
+                this.zoom_object.html(percent + "%");
+            }
+        }
+    },
+
+    /**
+     * Get some information about the image.
+     *     Currently orig_(width|height), display_(width|height), angle, zoom and src params are supported.
+     *
+     *  @param {string} parameter to check
+     *  @param {boolean} withoutRotation if param is orig_width or orig_height and this flag is set to true,
+     *      method will return original image width without considering rotation.
+     *
+     */
+    info: function(param, withoutRotation) {
+        if (!param) { return; }
+
+        switch (param) {
+            case 'orig_width':
+            case 'orig_height':
+                if (withoutRotation) {
+                    return (this.img_object.angle() % 180 === 0 ? this.img_object[param]() :
+                            param === 'orig_width' ? this.img_object.orig_height() : 
+                                                        this.img_object.orig_width());
+                } else {
+                    return this.img_object[param]();
+                }
+            case 'display_width':
+            case 'display_height':
+            case 'angle':
+                return this.img_object[param]();
+            case 'zoom':
+                return this.current_zoom;
+            case 'src':
+                return this.img_object.object().attr('src');
+        }
+    },
+
+    /**
+    *   callback for handling mousdown event to start dragging image
+    **/
+    _mouseStart: function( e )
+    {
+        $.ui.mouse.prototype._mouseStart.call(this, e);
+        if (this._trigger('onStartDrag', 0, this._getMouseCoords(e)) === false) {
+            return false;
+        }
+
+        /* start drag event*/
+        this.container.addClass("iviewer_drag_cursor");
+
+        this.dx = e.pageX - this.img_object.x();
+        this.dy = e.pageY - this.img_object.y();
+        return true;
+    },
+
+    _mouseCapture: function( e ) {
+        return true;
+    },
+
+    /**
+     * Handle mouse move if needed. User can avoid using this callback, because
+     *    he can get the same information through public methods.
+     *  @param {jQuery.Event} e
+     */
+    _handleMouseMove: function(e) {
+        this._trigger('onMouseMove', e.originalEvent, this._getMouseCoords(e));
+    },
+
+    /**
+    *   callback for handling mousemove event to drag image
+    **/
+    _mouseDrag: function(e)
+    {
+        $.ui.mouse.prototype._mouseDrag.call(this, e);
+        var ltop =  e.pageY - this.dy;
+        var lleft = e.pageX - this.dx;
+
+        this.setCoords(lleft, ltop);
+        this._trigger('onDrag', e.originalEvent, this._getMouseCoords(e));
+        return false;
+    },
+
+    /**
+    *   callback for handling stop drag
+    **/
+    _mouseStop: function(e)
+    {
+        $.ui.mouse.prototype._mouseStop.call(this, e);
+        this.container.removeClass("iviewer_drag_cursor");
+        this._trigger('onStopDrag', 0, this._getMouseCoords(e));
+    },
+
+    _click: function(e)
+    {
+        this._trigger('onClick', 0, this._getMouseCoords(e));
+    },
+
+    /**
+    *   create zoom buttons info box
+    **/
+    createui: function()
+    {
+        var me=this;
+
+        $("<div>", { 'class': "iviewer_zoom_in iviewer_common iviewer_button"})
+                    .bind('mousedown touchstart',function(){me.zoom_by(1); return false;})
+                    .appendTo(this.container);
+
+        $("<div>", { 'class': "iviewer_zoom_out iviewer_common iviewer_button"})
+                    .bind('mousedown touchstart',function(){me.zoom_by(- 1); return false;})
+                    .appendTo(this.container);
+
+        $("<div>", { 'class': "iviewer_zoom_zero iviewer_common iviewer_button"})
+                    .bind('mousedown touchstart',function(){me.set_zoom(100); return false;})
+                    .appendTo(this.container);
+
+        $("<div>", { 'class': "iviewer_zoom_fit iviewer_common iviewer_button"})
+                    .bind('mousedown touchstart',function(){me.fit(this); return false;})
+                    .appendTo(this.container);
+
+        this.zoom_object = $("<div>").addClass("iviewer_zoom_status iviewer_common")
+                                    .appendTo(this.container);
+
+        $("<div>", { 'class': "iviewer_rotate_left iviewer_common iviewer_button"})
+                    .bind('mousedown touchstart',function(){me.angle(-90); return false;})
+                    .appendTo(this.container);
+
+        $("<div>", { 'class': "iviewer_rotate_right iviewer_common iviewer_button" })
+                    .bind('mousedown touchstart',function(){me.angle(90); return false;})
+                    .appendTo(this.container);
+
+        this.update_status(); //initial status update
+    }
+
+} );
 
 /**
- * @class ImageObject Class represents image and provides public api without
+ * @class $.ui.iviewer.ImageObject Class represents image and provides public api without
  *     extending image prototype.
  * @constructor
  * @param {boolean} do_anim Do we want to animate image on dimension changes?
  */
-var ImageObject = function(do_anim) {
+$.ui.iviewer.ImageObject = function(do_anim) {
     this._img = $("<img>")
             //this is needed, because chromium sets them auto otherwise
             .css({ position: "absolute", top :"0px", left: "0px"});
@@ -139,7 +749,7 @@ var ImageObject = function(do_anim) {
 };
 
 
-/** @lends ImageObject.prototype */
+/** @lends $.ui.iviewer.ImageObject.prototype */
 (function() {
     /**
      * Restore initial object state.
@@ -408,619 +1018,8 @@ var ImageObject = function(do_anim) {
         }
     };
 
-}).apply(ImageObject.prototype);
+}).apply($.ui.iviewer.ImageObject.prototype);
 
-$.widget( "ui.iviewer", $.ui.mouse, {
-    widgetEventPrefix: "iviewer",
-    options : {
-        /**
-        * start zoom value for image, not used now
-        * may be equal to "fit" to fit image into container or scale in %
-        **/
-        zoom: "fit",
-        /**
-        * base value to scale image
-        **/
-        zoom_base: 100,
-        /**
-        * maximum zoom
-        **/
-        zoom_max: 800,
-        /**
-        * minimum zoom
-        **/
-        zoom_min: 25,
-        /**
-        * base of rate multiplier.
-        * zoom is calculated by formula: zoom_base * zoom_delta^rate
-        **/
-        zoom_delta: 1.4,
-        /**
-        * whether the zoom should be animated.
-        */
-        zoom_animation: true,
-        /**
-        * if true plugin doesn't add its own controls
-        **/
-        ui_disabled: false,
-        /**
-        * if false, plugin doesn't bind resize event on window and this must
-        * be handled manually
-        **/
-        update_on_resize: true,
-        /**
-        * event is triggered when zoom value is changed
-        * @param int new zoom value
-        * @return boolean if false zoom action is aborted
-        **/
-        onZoom: jQuery.noop,
-        /**
-        * event is triggered when zoom value is changed after image is set to the new dimensions
-        * @param int new zoom value
-        * @return boolean if false zoom action is aborted
-        **/
-        onAfterZoom: jQuery.noop,
-        /**
-        * event is fired on drag begin
-        * @param object coords mouse coordinates on the image
-        * @return boolean if false is returned, drag action is aborted
-        **/
-        onStartDrag: jQuery.noop,
-        /**
-        * event is fired on drag action
-        * @param object coords mouse coordinates on the image
-        **/
-        onDrag: jQuery.noop,
-        /**
-        * event is fired when mouse moves over image
-        * @param object coords mouse coordinates on the image
-        **/
-        onMouseMove: jQuery.noop,
-        /**
-        * mouse click event
-        * @param object coords mouse coordinates on the image
-        **/
-        onClick: jQuery.noop,
-        /**
-        * event is fired when image starts to load
-        */
-        onStartLoad: null,
-        /**
-        * event is fired, when image is loaded and initially positioned
-        */
-        onFinishLoad: null
-    },
-
-    _create: function() {
-        var me = this;
-
-        //drag variables
-        this.dx = 0;
-        this.dy = 0;
-
-        /* object containing actual information about image
-        *   @img_object.object - jquery img object
-        *   @img_object.orig_{width|height} - original dimensions
-        *   @img_object.display_{width|height} - actual dimensions
-        */
-        this.img_object = {};
-
-        this.zoom_object = {}; //object to show zoom status
-
-        this._angle = 0;
-
-        this.current_zoom = this.options.zoom;
-
-        if(this.options.src === null){
-            return;
-        }
-
-        this.container = this.element;
-
-        this._updateContainerInfo();
-
-        //init container
-        this.container.css("overflow","hidden");
-
-        if(this.options.update_on_resize == true)
-        {
-            $(window).resize(function()
-            {
-                me._updateContainerInfo();
-            });
-        }
-
-        this.img_object = new ImageObject(this.options.zoom_animation);
-
-        //init object
-        this.img_object.object()
-            //bind mouse events
-            .click(function(e){return me._click(e)})
-            .mousewheel(function(ev, delta)
-            {
-                //this event is there instead of containing div, because
-                //at opera it triggers many times on div
-                var zoom = (delta > 0)?1:-1;
-                me.zoom_by(zoom);
-                return false;
-            })
-            .prependTo(this.container);
-
-        this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
-
-        this.loadImage(this.options.src);
-
-        if(!this.options.ui_disabled)
-        {
-            this.createui();
-        }
-
-        this._mouseInit();
-    },
-
-    destroy: function() {
-        this._mouseDestroy();
-    },
-
-    _updateContainerInfo: function()
-    {
-        this.options.height = this.container.height();
-        this.options.width = this.container.width();
-    },
-
-    loadImage: function( src )
-    {
-        this.current_zoom = this.options.zoom;
-        var me = this;
-
-        this._trigger('onStartLoad', 0, src);
-
-        this.img_object.load(src, function() {
-                me.container.addClass("iviewer_cursor");
-
-                if(me.options.zoom == "fit"){
-                    me.fit(true);
-                }
-                else {
-                    me.set_zoom(me.options.zoom, true);
-                }
-
-                if(me.options.onFinishLoad)
-                {
-                    me._trigger('onFinishLoad', 0, src);
-                }
-        });
-    },
-
-    /**
-    * fits image in the container
-    *
-    * @param {boolean} skip_animation
-    **/
-    fit: function(skip_animation)
-    {
-        var aspect_ratio = this.img_object.orig_width() / this.img_object.orig_height();
-        var window_ratio = this.options.width /  this.options.height;
-        var choose_left = (aspect_ratio > window_ratio);
-        var new_zoom = 0;
-
-        if(choose_left){
-            new_zoom = this.options.width / this.img_object.orig_width() * 100;
-        }
-        else {
-            new_zoom = this.options.height / this.img_object.orig_height() * 100;
-        }
-
-      this.set_zoom(new_zoom, skip_animation);
-    },
-
-    /**
-    * center image in container
-    **/
-    center: function()
-    {
-        this.setCoords(-Math.round((this.img_object.display_width() - this.options.width)/2),
-                -Math.round((this.img_object.display_height() - this.options.height)/2));
-    },
-
-    /**
-    *   move a point in container to the center of display area
-    *   @param x a point in container
-    *   @param y a point in container
-    **/
-    moveTo: function(x, y)
-    {
-        var dx = x-Math.round(this.options.width/2);
-        var dy = y-Math.round(this.options.height/2);
-
-        var new_x = this.img_object.x() - dx;
-        var new_y = this.img_object.y() - dy;
-
-        this.setCoords(new_x, new_y);
-    },
-
-    /**
-     * Get container offset object.
-     */
-    getContainerOffset: function() {
-        return jQuery.extend({}, this.container.offset());
-    },
-
-    /**
-    * set coordinates of upper left corner of image object
-    **/
-    setCoords: function(x,y)
-    {
-        //do nothing while image is being loaded
-        if(!this.img_object.loaded()) { return; }
-
-        var coords = this._correctCoords(x,y);
-        this.img_object.x(coords.x);
-        this.img_object.y(coords.y);
-    },
-
-    _correctCoords: function( x, y )
-    {
-        x = parseInt(x, 10);
-        y = parseInt(y, 10);
-
-        //check new coordinates to be correct (to be in rect)
-        if(y > 0){
-            y = 0;
-        }
-        if(x > 0){
-            x = 0;
-        }
-        if(y + this.img_object.display_height() < this.options.height){
-            y = this.options.height - this.img_object.display_height();
-        }
-        if(x + this.img_object.display_width() < this.options.width){
-            x = this.options.width - this.img_object.display_width();
-        }
-        if(this.img_object.display_width() <= this.options.width){
-            x = -(this.img_object.display_width() - this.options.width)/2;
-        }
-        if(this.img_object.display_height() <= this.options.height){
-            y = -(this.img_object.display_height() - this.options.height)/2;
-        }
-
-        return { x: x, y:y };
-    },
-
-
-    /**
-    * convert coordinates on the container to the coordinates on the image (in original size)
-    *
-    * @return object with fields x,y according to coordinates or false
-    * if initial coords are not inside image
-    **/
-    containerToImage : function (x,y)
-    {
-        var coords = { x : x - this.img_object.x(),
-                 y :  y - this.img_object.y()
-        };
-
-        coords = this.img_object.toOriginalCoords(coords);
-
-        return { x :  util.descaleValue(coords.x, this.current_zoom),
-                 y :  util.descaleValue(coords.y, this.current_zoom)
-        };
-    },
-
-    /**
-    * convert coordinates on the image (in original size, and zero angle) to the coordinates on the container
-    *
-    * @return object with fields x,y according to coordinates
-    **/
-    imageToContainer : function (x,y)
-    {
-        var coords = {
-                x : util.scaleValue(x, this.current_zoom),
-                y : util.scaleValue(y, this.current_zoom)
-            };
-
-        return this.img_object.toRealCoords(coords);
-    },
-
-    /**
-    * get mouse coordinates on the image
-    * @param e - object containing pageX and pageY fields, e.g. mouse event object
-    *
-    * @return object with fields x,y according to coordinates or false
-    * if initial coords are not inside image
-    **/
-    _getMouseCoords : function(e)
-    {
-        var containerOffset = this.container.offset();
-            coords = this.containerToImage(e.pageX - containerOffset.left, e.pageY - containerOffset.top),
-            zoom = this.current_zoom;
-
-        return coords;
-    },
-
-    /**
-    * set image scale to the new_zoom
-    *
-    * @param {number} new_zoom image scale in %
-    * @param {boolean} skip_animation
-    **/
-    set_zoom: function(new_zoom, skip_animation)
-    {
-        if (this._trigger('onZoom', 0, new_zoom) == false) {
-            return;
-        }
-
-        //do nothing while image is being loaded
-        if(!this.img_object.loaded()) { return; }
-
-        if(new_zoom <  this.options.zoom_min)
-        {
-            new_zoom = this.options.zoom_min;
-        }
-        else if(new_zoom > this.options.zoom_max)
-        {
-            new_zoom = this.options.zoom_max;
-        }
-
-        /* we fake these values to make fit zoom properly work */
-        if(this.current_zoom == "fit")
-        {
-            var old_x = Math.round(this.options.width/2 + this.img_object.orig_width()/2);
-            var old_y = Math.round(this.options.height/2 + this.img_object.orig_height()/2);
-            this.current_zoom = 100;
-        }
-        else {
-            var old_x = -this.img_object.x() + Math.round(this.options.width/2);
-            var old_y = -this.img_object.y() + Math.round(this.options.height/2);
-        }
-
-        var new_width = util.scaleValue(this.img_object.orig_width(), new_zoom);
-        var new_height = util.scaleValue(this.img_object.orig_height(), new_zoom);
-        var new_x = util.scaleValue( util.descaleValue(old_x, this.current_zoom), new_zoom);
-        var new_y = util.scaleValue( util.descaleValue(old_y, this.current_zoom), new_zoom);
-
-        new_x = this.options.width/2 - new_x;
-        new_y = this.options.height/2 - new_y;
-
-        this.img_object.display_width(new_width);
-        this.img_object.display_height(new_height);
-
-        var coords = this._correctCoords( new_x, new_y ),
-            self = this;
-
-        this.img_object.setImageProps(new_width, new_height, coords.x, coords.y,
-                                        skip_animation, function() {
-            self._trigger('onAfterZoom', 0, new_zoom );
-        });
-        this.current_zoom = new_zoom;
-
-        this.update_status();
-    },
-
-    /**
-    * changes zoom scale by delta
-    * zoom is calculated by formula: zoom_base * zoom_delta^rate
-    * @param Integer delta number to add to the current multiplier rate number
-    **/
-    zoom_by: function(delta)
-    {
-        var closest_rate = this.find_closest_zoom_rate(this.current_zoom);
-
-        var next_rate = closest_rate + delta;
-        var next_zoom = this.options.zoom_base * Math.pow(this.options.zoom_delta, next_rate)
-        if(delta > 0 && next_zoom < this.current_zoom)
-        {
-            next_zoom *= this.options.zoom_delta;
-        }
-
-        if(delta < 0 && next_zoom > this.current_zoom)
-        {
-            next_zoom /= this.options.zoom_delta;
-        }
-
-        this.set_zoom(next_zoom);
-    },
-
-    /**
-    * Rotate image
-    * @param {num} deg Degrees amount to rotate. Positive values rotate image clockwise.
-    *     Currently 0, 90, 180, 270 and -90, -180, -270 values are supported
-    *
-    * @param {boolean} abs If the flag is true if, the deg parameter will be considered as
-    *     a absolute value and relative otherwise.
-    * @return {num|null} Method will return current image angle if called without any arguments.
-    **/
-    angle: function(deg, abs) {
-        if (arguments.length === 0) { return this.img_object.angle(); }
-
-        if (deg < -270 || deg > 270 || deg % 90 !== 0) { return; }
-        if (!abs) { deg += this.img_object.angle(); }
-        if (deg < 0) { deg += 360; }
-        if (deg >= 360) { deg -= 360; }
-
-        if (deg === this.img_object.angle()) { return; }
-
-        this.img_object.angle(deg);
-        //the rotate behavior is different in all editors. For now we  just center the
-        //image. However, it will be better to try to keep the position.
-        this.center();
-        this._trigger('angle', 0, this.img_object.angle());
-    },
-
-    /**
-    * finds closest multiplier rate for value
-    * basing on zoom_base and zoom_delta values from settings
-    * @param Number value zoom value to examine
-    **/
-    find_closest_zoom_rate: function(value)
-    {
-        if(value == this.options.zoom_base)
-        {
-            return 0;
-        }
-
-        function div(val1,val2) { return val1 / val2 };
-        function mul(val1,val2) { return val1 * val2 };
-
-        var func = (value > this.options.zoom_base)?mul:div;
-        var sgn = (value > this.options.zoom_base)?1:-1;
-
-        var mltplr = this.options.zoom_delta;
-        var rate = 1;
-
-        while(Math.abs(func(this.options.zoom_base, Math.pow(mltplr,rate)) - value) >
-              Math.abs(func(this.options.zoom_base, Math.pow(mltplr,rate+1)) - value))
-        {
-            rate++;
-        }
-
-        return sgn * rate;
-    },
-
-    /* update scale info in the container */
-    update_status: function()
-    {
-        if(!this.options.ui_disabled)
-        {
-            var percent = Math.round(100*this.img_object.display_height()/this.img_object.orig_height());
-            if(percent)
-            {
-                this.zoom_object.html(percent + "%");
-            }
-        }
-    },
-
-    /**
-     * Get some information about the image.
-     *     Currently orig_(width|height), display_(width|height), angle, zoom and src params are supported.
-     *
-     *  @param {string} parameter to check
-     *  @param {boolean} withoutRotation if param is orig_width or orig_height and this flag is set to true,
-     *      method will return original image width without considering rotation.
-     *
-     */
-    info: function(param, withoutRotation) {
-        if (!param) { return; }
-
-        switch (param) {
-            case 'orig_width':
-            case 'orig_height':
-                if (withoutRotation) {
-                    return (this.img_object.angle() % 180 === 0 ? this.img_object[param]() :
-                            param === 'orig_width' ? this.img_object.orig_height() : 
-                                                        this.img_object.orig_width());
-                } else {
-                    return this.img_object[param]();
-                }
-            case 'display_width':
-            case 'display_height':
-            case 'angle':
-                return this.img_object[param]();
-            case 'zoom':
-                return this.current_zoom;
-            case 'src':
-                return this.img_object.object().attr('src');
-        }
-    },
-
-    /**
-    *   callback for handling mousdown event to start dragging image
-    **/
-    _mouseStart: function( e )
-    {
-        $.ui.mouse.prototype._mouseStart.call(this, e);
-        if (this._trigger('onStartDrag', 0, this._getMouseCoords(e)) === false) {
-            return false;
-        }
-
-        /* start drag event*/
-        this.container.addClass("iviewer_drag_cursor");
-
-        this.dx = e.pageX - this.img_object.x();
-        this.dy = e.pageY - this.img_object.y();
-        return true;
-    },
-
-    _mouseCapture: function( e ) {
-        return true;
-    },
-
-    /**
-     * Handle mouse move if needed. User can avoid using this callback, because
-     *    he can get the same information through public methods.
-     *  @param {jQuery.Event} e
-     */
-    _handleMouseMove: function(e) {
-        this._trigger('onMouseMove', e.originalEvent, this._getMouseCoords(e));
-    },
-
-    /**
-    *   callback for handling mousemove event to drag image
-    **/
-    _mouseDrag: function(e)
-    {
-        $.ui.mouse.prototype._mouseDrag.call(this, e);
-        var ltop =  e.pageY - this.dy;
-        var lleft = e.pageX - this.dx;
-
-        this.setCoords(lleft, ltop);
-        this._trigger('onDrag', e.originalEvent, this._getMouseCoords(e));
-        return false;
-    },
-
-    /**
-    *   callback for handling stop drag
-    **/
-    _mouseStop: function(e)
-    {
-        $.ui.mouse.prototype._mouseStop.call(this, e);
-        this.container.removeClass("iviewer_drag_cursor");
-        this._trigger('onStopDrag', 0, this._getMouseCoords(e));
-    },
-
-    _click: function(e)
-    {
-        this._trigger('onClick', 0, this._getMouseCoords(e));
-    },
-
-    /**
-    *   create zoom buttons info box
-    **/
-    createui: function()
-    {
-        var me=this;
-
-        $("<div>", { 'class': "iviewer_zoom_in iviewer_common iviewer_button"})
-                    .bind('mousedown touchstart',function(){me.zoom_by(1); return false;})
-                    .appendTo(this.container);
-
-        $("<div>", { 'class': "iviewer_zoom_out iviewer_common iviewer_button"})
-                    .bind('mousedown touchstart',function(){me.zoom_by(- 1); return false;})
-                    .appendTo(this.container);
-
-        $("<div>", { 'class': "iviewer_zoom_zero iviewer_common iviewer_button"})
-                    .bind('mousedown touchstart',function(){me.set_zoom(100); return false;})
-                    .appendTo(this.container);
-
-        $("<div>", { 'class': "iviewer_zoom_fit iviewer_common iviewer_button"})
-                    .bind('mousedown touchstart',function(){me.fit(this); return false;})
-                    .appendTo(this.container);
-
-        this.zoom_object = $("<div>").addClass("iviewer_zoom_status iviewer_common")
-                                    .appendTo(this.container);
-
-        $("<div>", { 'class': "iviewer_rotate_left iviewer_common iviewer_button"})
-                    .bind('mousedown touchstart',function(){me.angle(-90); return false;})
-                    .appendTo(this.container);
-
-        $("<div>", { 'class': "iviewer_rotate_right iviewer_common iviewer_button" })
-                    .bind('mousedown touchstart',function(){me.angle(90); return false;})
-                    .appendTo(this.container);
-
-        this.update_status(); //initial status update
-    }
-
-} );
 
 
 var util = {
