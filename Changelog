@@ -1,4 +1,4 @@
-Version 0.6.1
+Version 0.7
 
 * all callbacks are now fired with _trigger method of jQuery UI. So the first
   parameter in every callback now is a jquery event. Other arguments are
@@ -6,6 +6,7 @@ Version 0.6.1
   itself.
 * Added info method to access some image properties from outside world
 * Updated lightbox example to show, how multiple files can be shown
+* Rotation filters are now applied event at zero angle to please IE
 
 Version 0.6 (2012/02/07)
 

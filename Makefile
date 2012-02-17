@@ -1,5 +1,5 @@
 PROJECT=jquery.iviewer
-VERSION=0.6
+VERSION=0.7
 BUNDLE_NAME=${PROJECT}-${VERSION}
 
 #send all commits to the master repository
