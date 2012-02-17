@@ -180,6 +180,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         **/
         onDrag: jQuery.noop,
         /**
+        * event is fired on drag stop
+        * @param object coords mouse coordinates on the image
+        **/
+        onStopDrag: jQuery.noop,
+        /**
         * event is fired when mouse moves over image
         * @param object coords mouse coordinates on the image
         **/
