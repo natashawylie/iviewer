@@ -95,7 +95,7 @@ var ieTransforms = {
         '0': {
             marginLeft: 0,
             marginTop: 0,
-            filter: ''
+            filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=1, M12=0, M21=0, M22=1, SizingMethod="auto expand")'
         },
 
         '90': {
@@ -658,7 +658,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
      *  @param {jQuery.Event} e
      */
     _handleMouseMove: function(e) {
-        this._trigger('onMouseMove', e.originalEvent, this._getMouseCoords(e));
+        this._trigger('onMouseMove', e, this._getMouseCoords(e));
     },
 
     /**
@@ -671,7 +671,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         var lleft = e.pageX - this.dx;
 
         this.setCoords(lleft, ltop);
-        this._trigger('onDrag', e.originalEvent, this._getMouseCoords(e));
+        this._trigger('onDrag', e, this._getMouseCoords(e));
         return false;
     },
 
@@ -794,7 +794,8 @@ $.ui.iviewer.ImageObject = function(do_anim) {
         img.onload = function() {
             self._loaded = true;
             self._reset(this.width, this.height);
-            self._img.prop('src', src);
+
+            self._img[0].src = src;
             loaded();
         };
         img.src = src;
@@ -805,6 +806,8 @@ $.ui.iviewer.ImageObject = function(do_anim) {
             .removeAttr("height")
             .removeAttr("style")
             .css({ position: "absolute", top :"0px", left: "0px"})
+
+        this.angle(0);
     };
 
     this._dimension = function(prefix, name) {
