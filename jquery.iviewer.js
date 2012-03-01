@@ -8,7 +8,7 @@
  *  - http://www.gnu.org/copyleft/gpl.html
  *
  * Author: Dmitry Petrov
- * Version: 0.7
+ * Version: 0.7.1
  */
 
 ( function( $, undefined ) {
@@ -288,21 +288,24 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this._trigger('onStartLoad', 0, src);
 
+        this.container.addClass("iviewer_loading");
         this.img_object.load(src, function() {
-                me.container.addClass("iviewer_cursor");
-
-                if(me.options.zoom == "fit"){
-                    me.fit(true);
-                }
-                else {
-                    me.set_zoom(me.options.zoom, true);
-                }
-
-                if(me.options.onFinishLoad)
-                {
-                    me._trigger('onFinishLoad', 0, src);
-                }
+            me._imageLoaded(src);
         });
+    },
+
+    _imageLoaded: function(src) {
+        this.container.removeClass("iviewer_loading");
+        this.container.addClass("iviewer_cursor");
+
+        if(this.options.zoom == "fit"){
+            this.fit(true);
+        }
+        else {
+            this.set_zoom(this.options.zoom, true);
+        }
+
+        this._trigger('onFinishLoad', 0, src);
     },
 
     /**
@@ -800,18 +803,18 @@ $.ui.iviewer.ImageObject = function(do_anim) {
             self._loaded = true;
             self._reset(this.width, this.height);
 
+            self._img
+                .removeAttr("src")
+                .removeAttr("width")
+                .removeAttr("height")
+                .removeAttr("style")
+                .css({ position: "absolute", top :"0px", left: "0px"})
+
             self._img[0].src = src;
             loaded();
         };
+
         img.src = src;
-
-        this._img
-            .removeAttr("src")
-            .removeAttr("width")
-            .removeAttr("height")
-            .removeAttr("style")
-            .css({ position: "absolute", top :"0px", left: "0px"})
-
         this.angle(0);
     };
 

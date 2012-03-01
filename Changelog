@@ -1,4 +1,12 @@
-Version 0.7
+Version 0.7.1 (2012/03/01)
+
+* add class iviewer_loading while image is being loaded
+* move closure function that deals with loaded image to
+  the prototype to allow its expansion
+* reset image node attribute only after next image was
+  loaded to remove unwanted image flickering.
+
+Version 0.7 (2012/02/17)
 
 * all callbacks are now fired with _trigger method of jQuery UI. So the first
   parameter in every callback now is a jquery event. Other arguments are
