@@ -152,6 +152,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         **/
         ui_disabled: false,
         /**
+         * If false mousewheel will be disabled
+         */
+        mousewheel: true,
+        /**
         * if false, plugin doesn't bind resize event on window and this must
         * be handled manually
         **/
@@ -245,19 +249,23 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this.img_object = new $.ui.iviewer.ImageObject(this.options.zoom_animation);
 
+        if (this.options.mousewheel) {
+            this.img_object.object()
+                .mousewheel(function(ev, delta)
+                {
+                    //this event is there instead of containing div, because
+                    //at opera it triggers many times on div
+                    var zoom = (delta > 0)?1:-1;
+                    me.zoom_by(zoom);
+                    return false;
+                });
+        }
+
         //init object
         this.img_object.object()
             //bind mouse events
             .click(function(e){return me._click(e)})
-            .mousewheel(function(ev, delta)
-            {
-                //this event is there instead of containing div, because
-                //at opera it triggers many times on div
-                var zoom = (delta > 0)?1:-1;
-                me.zoom_by(zoom);
-                return false;
-            })
-            .prependTo(this.container);
+                .prependTo(this.container);
 
         this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
 
