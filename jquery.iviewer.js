@@ -643,6 +643,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                 return this.current_zoom;
             case 'src':
                 return this.img_object.object().attr('src');
+            case 'coords':
+                return {
+                    x: this.img_object.x(),
+                    y: this.img_object.y()
+                };
         }
     },
 

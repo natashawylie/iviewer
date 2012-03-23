@@ -1,6 +1,7 @@
 Version 0.7.2
 
 * add mousewheel options to add possibility to disable it
+* add an ability to return current coordinates from the info method
 
 Version 0.7.1 (2012/03/01)
 
