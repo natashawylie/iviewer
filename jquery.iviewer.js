@@ -1023,19 +1023,20 @@ $.ui.iviewer.ImageObject = function(do_anim) {
         }
 
         if (this._do_anim && !skip_animation) {
-            this._img.animate(params, {
-                duration: 200, 
-                complete: complete,
-                step: function(now, fx) {
-                    if(useIeTransforms && swapDims && (fx.prop === 'top')) {
-                        var percent = (now - fx.start) / (fx.end - fx.start);
+            this._img.stop(true)
+                .animate(params, {
+                    duration: 200, 
+                    complete: complete,
+                    step: function(now, fx) {
+                        if(useIeTransforms && swapDims && (fx.prop === 'top')) {
+                            var percent = (now - fx.start) / (fx.end - fx.start);
 
-                        img.height(ieh + iedh * percent);
-                        img.width(iew + iedw * percent);
-                        img.css('top', now);
+                            img.height(ieh + iedh * percent);
+                            img.width(iew + iedw * percent);
+                            img.css('top', now);
+                        }
                     }
-                }
-            });
+                });
         } else {
             this._img.css(params);
             setTimeout(complete, 0); //both if branches should behave equally.
