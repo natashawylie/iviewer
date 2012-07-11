@@ -505,6 +505,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         new_x = this.options.width/2 - new_x;
         new_y = this.options.height/2 - new_y;
 
+        new_width = Math.floor(new_width);
+        new_height = Math.floor(new_height);
+        new_x = Math.floor(new_x);
+        new_y = Math.floor(new_y);
+
         this.img_object.display_width(new_width);
         this.img_object.display_height(new_height);
 
