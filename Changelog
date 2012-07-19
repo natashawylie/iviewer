@@ -1,7 +1,10 @@
-Version 0.7.2
+Version 0.7.2 (2012/07/20)
 
-* add mousewheel options to add possibility to disable it
+* add mousewheel option to add possibility to disable it
 * add an ability to return current coordinates from the info method
+* [bug] Stop previous animation on the subsequent dimensions change
+* [bug] Round dimension and position values on zoom change to prevent
+  coordinates distortion.
 
 Version 0.7.1 (2012/03/01)
 
