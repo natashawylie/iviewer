@@ -1,3 +1,7 @@
+Version 0.7.3 (in future)
+
+* reset max-width css property on image load to avoid breaking in the twitter bootstrap
+
 Version 0.7.2 (2012/07/20)
 
 * add mousewheel option to add possibility to disable it
