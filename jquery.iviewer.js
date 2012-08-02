@@ -8,7 +8,7 @@
  *  - http://www.gnu.org/copyleft/gpl.html
  *
  * Author: Dmitry Petrov
- * Version: 0.7.2
+ * Version: 0.7.2+
  */
 
 ( function( $, undefined ) {
@@ -826,7 +826,8 @@ $.ui.iviewer.ImageObject = function(do_anim) {
                 .removeAttr("width")
                 .removeAttr("height")
                 .removeAttr("style")
-                .css({ position: "absolute", top :"0px", left: "0px"})
+                //max-width is reset, because plugin breaks in the twitter bootstrap otherwise
+                .css({ position: "absolute", top :"0px", left: "0px", maxWidth: "none"})
 
             self._img[0].src = src;
             loaded();
