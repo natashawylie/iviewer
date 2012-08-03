@@ -15,10 +15,12 @@
 
 //this code was taken from the https://github.com/furf/jquery-ui-touch-punch
 var mouseEvents = {
-    touchstart: 'mousedown',
-    touchmove: 'mousemove',
-    touchend: 'mouseup'
-};
+        touchstart: 'mousedown',
+        touchmove: 'mousemove',
+        touchend: 'mouseup'
+    },
+    gesturesSupport = 'ongesturestart' in document.createElement('div');
+
 
 /**
  * Convert a touch event to a mouse-like
@@ -47,7 +49,7 @@ mouseProto._mouseInit = function() {
     self._touchActive = false;
 
     this.element.bind( 'touchstart.' + this.widgetName, function(event) {
-        if (event.originalEvent.touches && event.originalEvent.touches.length > 1) { return; }
+        if (gesturesSupport && event.originalEvent.touches.length > 1) { return; }
         self._touchActive = true;
         return self._mouseDown(makeMouseEvent(event));
     })
@@ -55,7 +57,7 @@ mouseProto._mouseInit = function() {
     var self = this;
     // these delegates are required to keep context
     this._mouseMoveDelegate = function(event) {
-        if (event.originalEvent.touches && event.originalEvent.touches.length > 1) { return; }
+        if (gesturesSupport && event.originalEvent.touches && event.originalEvent.touches.length > 1) { return; }
         if (self._touchActive) {
             return self._mouseMove(makeMouseEvent(event));
         }
@@ -262,18 +264,20 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                     return false;
                 });
 
-            var gestureThrottle = +new Date();
-            this.img_object.object()
-                .bind('gesturechange', function(ev) {
-                    //do not want to import throttle function from underscore
-                    var d = +new Date();
-                    if ((d - gestureThrottle) < 50) { return; }
-                    gestureThrottle = d;
+            if (gesturesSupport) {
+                var gestureThrottle = +new Date();
+                this.img_object.object()
+                    .bind('gesturechange', function(ev) {
+                        //do not want to import throttle function from underscore
+                        var d = +new Date();
+                        if ((d - gestureThrottle) < 50) { return; }
+                        gestureThrottle = d;
 
-                    var zoom = (ev.originalEvent.scale > 1)?1:-1;
-                    me.zoom_by(zoom);
-                    ev.preventDefault();
-                });
+                        var zoom = (ev.originalEvent.scale > 1)?1:-1;
+                        me.zoom_by(zoom);
+                        ev.preventDefault();
+                    });
+            }
         }
 
         //init object
