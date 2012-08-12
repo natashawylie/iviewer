@@ -259,8 +259,14 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                 {
                     //this event is there instead of containing div, because
                     //at opera it triggers many times on div
-                    var zoom = (delta > 0)?1:-1;
-                    me.zoom_by(zoom);
+                    var zoom = (delta > 0)?1:-1,
+                        container_offset = me.container.offset(),
+                        mouse_pos = {
+                            x: ev.pageX - container_offset.left,
+                            y: ev.pageY - container_offset.top
+                        };
+
+                    me.zoom_by(zoom, mouse_pos);
                     return false;
                 });
 
@@ -485,8 +491,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     *
     * @param {number} new_zoom image scale in %
     * @param {boolean} skip_animation
+    * @param {x: number, y: number} Coordinates of point the should not be moved on zoom. The default is the center of image.
     **/
-    set_zoom: function(new_zoom, skip_animation)
+    set_zoom: function(new_zoom, skip_animation, zoom_center)
     {
         if (this._trigger('onZoom', 0, new_zoom) == false) {
             return;
@@ -494,6 +501,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         //do nothing while image is being loaded
         if(!this.img_object.loaded()) { return; }
+
+        zoom_center = zoom_center || {
+            x: Math.round(this.options.width/2),
+            y: Math.round(this.options.height/2)
+        }
 
         if(new_zoom <  this.options.zoom_min)
         {
@@ -507,13 +519,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         /* we fake these values to make fit zoom properly work */
         if(this.current_zoom == "fit")
         {
-            var old_x = Math.round(this.options.width/2 + this.img_object.orig_width()/2);
-            var old_y = Math.round(this.options.height/2 + this.img_object.orig_height()/2);
+            var old_x = zoom_center.x + Math.round(this.img_object.orig_width()/2);
+            var old_y = zoom_center.y + Math.round(this.img_object.orig_height()/2);
             this.current_zoom = 100;
         }
         else {
-            var old_x = -this.img_object.x() + Math.round(this.options.width/2);
-            var old_y = -this.img_object.y() + Math.round(this.options.height/2);
+            var old_x = -this.img_object.x() + zoom_center.x;
+            var old_y = -this.img_object.y() + zoom_center.y
         }
 
         var new_width = util.scaleValue(this.img_object.orig_width(), new_zoom);
@@ -521,8 +533,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         var new_x = util.scaleValue( util.descaleValue(old_x, this.current_zoom), new_zoom);
         var new_y = util.scaleValue( util.descaleValue(old_y, this.current_zoom), new_zoom);
 
-        new_x = this.options.width/2 - new_x;
-        new_y = this.options.height/2 - new_y;
+        new_x = zoom_center.x - new_x;
+        new_y = zoom_center.y - new_y;
 
         new_width = Math.floor(new_width);
         new_height = Math.floor(new_height);
@@ -548,8 +560,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     * changes zoom scale by delta
     * zoom is calculated by formula: zoom_base * zoom_delta^rate
     * @param Integer delta number to add to the current multiplier rate number
+    * @param {x: number, y: number=} Coordinates of point the should not be moved on zoom.
     **/
-    zoom_by: function(delta)
+    zoom_by: function(delta, zoom_center)
     {
         var closest_rate = this.find_closest_zoom_rate(this.current_zoom);
 
@@ -565,7 +578,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             next_zoom /= this.options.zoom_delta;
         }
 
-        this.set_zoom(next_zoom);
+        this.set_zoom(next_zoom, undefined, zoom_center);
     },
 
     /**

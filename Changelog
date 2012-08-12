@@ -2,6 +2,8 @@ Version 0.7.3 (in future)
 
 * reset max-width css property on image load to avoid breaking in the twitter bootstrap
 * support gesture events for iOS systems
+* on zoom with mouse wheel mouse position is preferred over center of image as
+a fixed point
 
 Version 0.7.2 (2012/07/20)
 
