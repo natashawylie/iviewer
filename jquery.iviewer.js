@@ -717,6 +717,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         /* start drag event*/
         this.container.addClass("iviewer_drag_cursor");
 
+        //#10: fix movement quirks for ipad
+        dragInitialized = !(e.originalEvent.changedTouches && e.originalEvent.changedTouches.length==1);
+
         this.dx = e.pageX - this.img_object.x();
         this.dy = e.pageY - this.img_object.y();
         return true;
@@ -741,6 +744,14 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     _mouseDrag: function(e)
     {
         $.ui.mouse.prototype._mouseDrag.call(this, e);
+
+        //#10: imitate mouseStart, because we can get here without it on iPad for some reason
+        if (!dragInitialized) {
+            this.dx = e.pageX - this.img_object.x();
+            this.dy = e.pageY - this.img_object.y();
+            dragInitialized = true;
+        }
+
         var ltop =  e.pageY - this.dy;
         var lleft = e.pageX - this.dx;
 

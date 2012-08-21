@@ -4,6 +4,8 @@ Version 0.7.3 (in future)
 * support gesture events for iOS systems
 * on zoom with mouse wheel mouse position is preferred over center of image as
 a fixed point
+* on ipad zoom will prefer the center of the gesture (thx to colinbashbash!)
+* ipad panning stability fixes (thx to colinbashbash!)
 
 Version 0.7.2 (2012/07/20)
 
