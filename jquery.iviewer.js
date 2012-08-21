@@ -8,7 +8,7 @@
  *  - http://www.gnu.org/copyleft/gpl.html
  *
  * Author: Dmitry Petrov
- * Version: 0.7.3
+ * Version: 0.7.4
  */
 
 ( function( $, undefined ) {
@@ -718,7 +718,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.container.addClass("iviewer_drag_cursor");
 
         //#10: fix movement quirks for ipad
-        dragInitialized = !(e.originalEvent.changedTouches && e.originalEvent.changedTouches.length==1);
+        this._dragInitialized = !(e.originalEvent.changedTouches && e.originalEvent.changedTouches.length==1);
 
         this.dx = e.pageX - this.img_object.x();
         this.dy = e.pageY - this.img_object.y();
@@ -746,10 +746,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         $.ui.mouse.prototype._mouseDrag.call(this, e);
 
         //#10: imitate mouseStart, because we can get here without it on iPad for some reason
-        if (!dragInitialized) {
+        if (!this._dragInitialized) {
             this.dx = e.pageX - this.img_object.x();
             this.dy = e.pageY - this.img_object.y();
-            dragInitialized = true;
+            this._dragInitialized = true;
         }
 
         var ltop =  e.pageY - this.dy;
