@@ -272,16 +272,32 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
             if (gesturesSupport) {
                 var gestureThrottle = +new Date();
+                var originalScale, originalCenter;
                 this.img_object.object()
-                    .bind('gesturechange', function(ev) {
+                    // .bind('gesturestart', function(ev) {
+                    .bind('touchstart', function(ev) {
+                        originalScale = me.current_zoom;
+                        var touches = ev.originalEvent.touches,
+                            container_offset;
+                        if (touches.length == 2) {
+                            container_offset = me.container.offset();
+                            originalCenter = {
+                                x: (touches[0].pageX + touches[1].pageX) / 2  - container_offset.left,
+                                y: (touches[0].pageY + touches[1].pageY) / 2 - container_offset.top
+                            };
+                        } else {
+                            originalCenter = null;
+                        }
+                    }).bind('gesturechange', function(ev) {
                         //do not want to import throttle function from underscore
                         var d = +new Date();
                         if ((d - gestureThrottle) < 50) { return; }
                         gestureThrottle = d;
-
-                        var zoom = (ev.originalEvent.scale > 1)?1:-1;
-                        me.zoom_by(zoom);
+                        var zoom = originalScale * ev.originalEvent.scale;
+                        me.set_zoom(zoom, originalCenter);
                         ev.preventDefault();
+                    }).bind('gestureend', function(ev) {
+                        originalCenter = null;
                     });
             }
         }
