@@ -1,4 +1,4 @@
-Version 0.7.3 (in future)
+Version 0.7.3 (2012/08/21)
 
 * reset max-width css property on image load to avoid breaking in the twitter bootstrap
 * support gesture events for iOS systems
