@@ -321,7 +321,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     destroy: function() {
+        $.Widget.prototype.destroy.call( this );
         this._mouseDestroy();
+        this.img_object.object().remove();
     },
 
     _updateContainerInfo: function()
