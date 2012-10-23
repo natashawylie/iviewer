@@ -8,7 +8,7 @@
  *  - http://www.gnu.org/copyleft/gpl.html
  *
  * Author: Dmitry Petrov
- * Version: 0.7.4
+ * Version: 0.7.5
  */
 
 ( function( $, undefined ) {
@@ -209,8 +209,12 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         /**
         * event is fired, when image is loaded and initially positioned
         */
-        onFinishLoad: null
-    },
+        onFinishLoad: null,
+        /**
+        * event is fired when image load error occurs
+        */
+        onErrorLoad: null
+	},
 
     _create: function() {
         var me = this;
@@ -342,6 +346,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.container.addClass("iviewer_loading");
         this.img_object.load(src, function() {
             me._imageLoaded(src);
+        }, function() {
+            me._trigger("onErrorLoad", 0, src);
         });
     },
 
@@ -869,7 +875,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      * @param {string} src Image url.
      * @param {Function=} loaded Function will be called on image load.
      */
-    this.load = function(src, loaded) {
+    this.load = function(src, loaded, error) {
         var self = this;
 
         loaded = loaded || jQuery.noop;
@@ -893,6 +899,8 @@ $.ui.iviewer.ImageObject = function(do_anim) {
             self._img[0].src = src;
             loaded();
         };
+
+        img.onerror = error;
 
         img.src = src;
         this.angle(0);
