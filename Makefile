@@ -1,5 +1,5 @@
 PROJECT=jquery.iviewer
-VERSION=0.7.4
+VERSION=0.7.5
 BUNDLE_NAME=${PROJECT}-${VERSION}
 
 #send all commits to the master repository
@@ -8,7 +8,7 @@ push:
 
 min:
 	rm -f jquery.iviewer.min.js
-	googlecc  --compilation_level WHITESPACE_ONLY --js jquery.iviewer.js --js_output_file jquery.iviewer.min.tmp.js
+	closure-compiler  --compilation_level WHITESPACE_ONLY --js jquery.iviewer.js --js_output_file jquery.iviewer.min.tmp.js
 	sed -n '/^\/\*/,/\*\// p' jquery.iviewer.js > jquery.iviewer.min.js
 	cat jquery.iviewer.min.tmp.js >> jquery.iviewer.min.js
 	rm -f jquery.iviewer.min.tmp.js
