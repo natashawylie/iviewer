@@ -336,6 +336,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.options.width = this.container.width();
     },
 
+    update: function()
+    {
+        this._updateContainerInfo()
+    },
+
     loadImage: function( src )
     {
         this.current_zoom = this.options.zoom;

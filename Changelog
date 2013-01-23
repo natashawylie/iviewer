@@ -1,3 +1,7 @@
+Version 0.7.6
+
+* add public update method
+
 Version 0.7.5 (2012/10/24)
 
 * add image load error callback
