@@ -945,6 +945,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
     this.x = setter(function(val, skipCss) { 
             this._x = val;
             if (!skipCss) {
+                this._finishAnimation();
                 this._img.css("left",this._x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
             }
         },
@@ -962,6 +963,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
     this.y = setter(function(val, skipCss) {
             this._y = val;
             if (!skipCss) {
+                this._finishAnimation();
                 this._img.css("top",this._y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
             }
         },
@@ -1122,6 +1124,11 @@ $.ui.iviewer.ImageObject = function(do_anim) {
             setTimeout(complete, 0); //both if branches should behave equally.
         }
     };
+
+    //if we set image coordinates we need to be sure that no animation is active atm
+    this._finishAnimation = function() {
+      this._img.stop(true, true);
+    }
 
 }).apply($.ui.iviewer.ImageObject.prototype);
 
