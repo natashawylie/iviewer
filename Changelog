@@ -2,6 +2,8 @@ Version 0.7.6
 
 * add public update method
 * immediately finish zoom animation if iage coordinates are set during it (#39)
+* do not remove asrc attribute from image when loading new one to prevent
+additional requests from some browsers (#31)
 
 Version 0.7.5 (2012/10/24)
 

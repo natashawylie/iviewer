@@ -894,7 +894,6 @@ $.ui.iviewer.ImageObject = function(do_anim) {
             self._reset(this.width, this.height);
 
             self._img
-                .removeAttr("src")
                 .removeAttr("width")
                 .removeAttr("height")
                 .removeAttr("style")
