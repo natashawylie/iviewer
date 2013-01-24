@@ -247,11 +247,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         //init container
         this.container.css("overflow","hidden");
 
-        if(this.options.update_on_resize == true)
-        {
-            $(window).resize(function()
-            {
-                me._updateContainerInfo();
+        if (this.options.update_on_resize == true) {
+            $(window).resize(function() {
+                me.update();
             });
         }
 
@@ -339,6 +337,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     update: function()
     {
         this._updateContainerInfo()
+        this.setCoords(this.img_object.x(), this.img_object.y());
     },
 
     loadImage: function( src )
