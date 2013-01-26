@@ -1,4 +1,4 @@
-Version 0.7.6
+Version 0.7.6 (2013/01/26)
 
 * add public update method
 * immediately finish zoom animation if iage coordinates are set during it (#39)

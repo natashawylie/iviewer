@@ -8,7 +8,7 @@
  *  - http://www.gnu.org/copyleft/gpl.html
  *
  * Author: Dmitry Petrov
- * Version: 0.7.5
+ * Version: 0.7.6
  */
 
 ( function( $, undefined ) {
