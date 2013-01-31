@@ -364,31 +364,38 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     next: function()
     {
         if(!this.isMultipleSources()) return;
-        this._trigger('onBeforePaginate', 0, 'next');
+        this._trigger('onBeforePaginate', 0, this.getPagination());
 
         if(this.currentIndex < (this.options.src.length - 1)) {
             this.currentIndex++;
             this.loadImage(this.options.src[this.currentIndex]);
             this.updatePages();
-            this._trigger('onAfterPaginate', 0, this.currentIndex);
+            this._trigger('onAfterPaginate', 0, this.getPagination());
         }
     },
 
     prev: function()
     {
         if(!this.isMultipleSources()) return;
-        this._trigger('onBeforePaginate', 0, 'prev');
+        this._trigger('onBeforePaginate', 0, this.getPagination());
 
         if(this.currentIndex > 0) {
             this.currentIndex--;
             this.loadImage(this.options.src[this.currentIndex]);
             this.updatePages();
-            this._trigger('onAfterPaginate', 0, this.currentIndex);
+            this._trigger('onAfterPaginate', 0, this.getPagination());
         }
     },
 
     updatePages: function() {
         this.container.find('.iviewer_pages').text('Pages: ' + (this.currentIndex + 1) + '/' + this.options.src.length);
+    },
+
+    getPagination: function() {
+        return {
+            current: this.currentIndex,
+            all: this.options.src.length
+        };
     },
 
     loadImage: function( src )
@@ -764,6 +771,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                     x: this.img_object.x(),
                     y: this.img_object.y()
                 };
+            case 'pagination':
+                return this.getPagination();
         }
     },
 

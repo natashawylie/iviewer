@@ -39,7 +39,9 @@
 
                   var iv3 = $("#viewer3").iviewer(
                   {
-                      src: ["test_image.jpg", "test_image2.jpg"]
+                      src: ["test_image.jpg", "test_image2.jpg"],
+                      onBeforePaginate: function(ev, pagination) { console.log(pagination); },
+                      onAfterPaginate: function(ev, pagination) { console.log(pagination); }
                   });
             });
         </script>
