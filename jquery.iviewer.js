@@ -392,6 +392,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     getPagination: function() {
+        if(!this.isMultipleSources()) return null;
+
         return {
             current: this.currentIndex,
             all: this.options.src.length
