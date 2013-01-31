@@ -213,7 +213,19 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         /**
         * event is fired when image load error occurs
         */
-        onErrorLoad: null
+        onErrorLoad: null,
+        /**
+         * event is fired before paginate
+         */
+        onBeforePaginate: jQuery.noop,
+        /**
+         * event is fired after paginate
+         */
+        onAfterPaginate: jQuery.noop,
+        /**
+         * current Index is used when array of images is passed src[currentIndex] will be shown as default
+         */
+        currentIndex: 0
 	},
 
     _create: function() {
@@ -312,7 +324,12 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
 
-        this.loadImage(this.options.src);
+        this.currentIndex = this.options.currentIndex;
+        if(this.isMultipleSources()) {
+            this.loadImage(this.options.src[this.currentIndex]);
+        } else {
+            this.loadImage(this.options.src);
+        }
 
         if(!this.options.ui_disabled)
         {
@@ -320,6 +337,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         }
 
         this._mouseInit();
+    },
+
+    isMultipleSources: function() {
+        return $.isArray(this.options.src);
     },
 
     destroy: function() {
@@ -338,6 +359,36 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     {
         this._updateContainerInfo()
         this.setCoords(this.img_object.x(), this.img_object.y());
+    },
+
+    next: function()
+    {
+        if(!this.isMultipleSources()) return;
+        this._trigger('onBeforePaginate', 0, 'next');
+
+        if(this.currentIndex < (this.options.src.length - 1)) {
+            this.currentIndex++;
+            this.loadImage(this.options.src[this.currentIndex]);
+            this.updatePages();
+            this._trigger('onAfterPaginate', 0, this.currentIndex);
+        }
+    },
+
+    prev: function()
+    {
+        if(!this.isMultipleSources()) return;
+        this._trigger('onBeforePaginate', 0, 'prev');
+
+        if(this.currentIndex > 0) {
+            this.currentIndex--;
+            this.loadImage(this.options.src[this.currentIndex]);
+            this.updatePages();
+            this._trigger('onAfterPaginate', 0, this.currentIndex);
+        }
+    },
+
+    updatePages: function() {
+        this.container.find('.iviewer_pages').text('Pages: ' + (this.currentIndex + 1) + '/' + this.options.src.length);
     },
 
     loadImage: function( src )
@@ -792,7 +843,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     createui: function()
     {
-        var me=this;
+        var me = this;
 
         $("<div>", { 'class': "iviewer_zoom_in iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.zoom_by(1); return false;})
@@ -820,6 +871,21 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         $("<div>", { 'class': "iviewer_rotate_right iviewer_common iviewer_button" })
                     .bind('mousedown touchstart',function(){me.angle(90); return false;})
                     .appendTo(this.container);
+
+        if(me.isMultipleSources()) {
+            $("<div>", { 'class': "iviewer_prev iviewer_common iviewer_button" })
+                .bind('mousedown touchstart',function(){me.prev(); return false;})
+                .appendTo(this.container);
+
+            $("<div>", { 'class': "iviewer_next iviewer_common iviewer_button" })
+                .bind('mousedown touchstart',function(){me.next(); return false;})
+                .appendTo(this.container);
+
+            $("<div>", { 'class': "iviewer_pages iviewer_common iviewer_button" })
+                .appendTo(this.container);
+
+            this.updatePages();
+        }
 
         this.update_status(); //initial status update
     }

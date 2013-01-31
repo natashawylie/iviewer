@@ -36,6 +36,11 @@
                     iv2.iviewer('loadImage', "test_image.jpg");
                     return false;
                   });
+
+                  var iv3 = $("#viewer3").iviewer(
+                  {
+                      src: ["test_image.jpg", "test_image2.jpg"]
+                  });
             });
         </script>
         <link rel="stylesheet" href="../jquery.iviewer.css" />
@@ -70,6 +75,8 @@
             <div id="viewer2" class="viewer"></div>
             <br />
             <p><a href="#" id="chimg">Change Image</a></p>
+            <div id="viewer3" class="viewer"></div>
+            <br />
         </div>
     </body>
 </html>
