@@ -124,6 +124,8 @@ var ieTransforms = {
 
 $.widget( "ui.iviewer", $.ui.mouse, {
     widgetEventPrefix: "iviewer",
+    images: [],
+    currentIndex: 0,
     options : {
         /**
         * start zoom value for image, not used now
@@ -213,7 +215,15 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         /**
         * event is fired when image load error occurs
         */
-        onErrorLoad: null
+        onErrorLoad: null,
+        /**
+         * event is fired before paginate
+         */
+        onBeforePaginate: jQuery.noop,
+        /**
+         * event is fired after paginate
+         */
+        onAfterPaginate: jQuery.noop
 	},
 
     _create: function() {
@@ -340,22 +350,64 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.setCoords(this.img_object.x(), this.img_object.y());
     },
 
-    loadImage: function( src )
+    next: function()
     {
+        if(this.currentIndex < (this.images.length - 1)) {
+            this._trigger('onBeforePaginate', 0, this.getPagination());
+            this.currentIndex++;
+            this.loadImage(this.images[this.currentIndex]);
+            this.updatePages();
+            this._trigger('onAfterPaginate', 0, this.getPagination());
+        }
+    },
+
+    prev: function()
+    {
+        if(this.currentIndex > 0) {
+            this._trigger('onBeforePaginate', 0, this.getPagination());
+            this.currentIndex--;
+            this.loadImage(this.images[this.currentIndex]);
+            this.updatePages();
+            this._trigger('onAfterPaginate', 0, this.getPagination());
+        }
+    },
+
+    updatePages: function() {
+        this.container.find('.iviewer_pages').text('Pages: ' + (this.currentIndex + 1) + '/' + this.images.length);
+    },
+
+    getPagination: function() {
+        if(!this.images.length) return null;
+
+        return {
+            current: this.currentIndex,
+            all: this.images.length
+        };
+    },
+
+    loadImage: function(src) {
+        var currentImage;
+        if($.isArray(src)) {
+            this.images = src;
+            currentImage = this.images[this.currentIndex];
+        } else {
+            currentImage = src;
+        }
+
         this.current_zoom = this.options.zoom;
         var me = this;
 
-        this._trigger('onStartLoad', 0, src);
+        this._trigger('onStartLoad', 0, currentImage);
 
         this.container.addClass("iviewer_loading");
-        this.img_object.load(src, function() {
-            me._imageLoaded(src);
+        this.img_object.load(currentImage, function() {
+            me._imageLoaded(currentImage);
         }, function() {
-            me._trigger("onErrorLoad", 0, src);
+            me._trigger("onErrorLoad", 0, currentImage);
         });
     },
 
-    _imageLoaded: function(src) {
+    _imageLoaded: function(currentImage) {
         this.container.removeClass("iviewer_loading");
         this.container.addClass("iviewer_cursor");
 
@@ -366,7 +418,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             this.set_zoom(this.options.zoom, true);
         }
 
-        this._trigger('onFinishLoad', 0, src);
+        this._trigger('onFinishLoad', 0, currentImage);
     },
 
     /**
@@ -713,6 +765,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                     x: this.img_object.x(),
                     y: this.img_object.y()
                 };
+            case 'pagination':
+                return this.getPagination();
         }
     },
 
@@ -792,7 +846,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     createui: function()
     {
-        var me=this;
+        var me = this;
 
         $("<div>", { 'class': "iviewer_zoom_in iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.zoom_by(1); return false;})
@@ -820,6 +874,21 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         $("<div>", { 'class': "iviewer_rotate_right iviewer_common iviewer_button" })
                     .bind('mousedown touchstart',function(){me.angle(90); return false;})
                     .appendTo(this.container);
+
+        if(me.images.length) {
+            $("<div>", { 'class': "iviewer_prev iviewer_common iviewer_button" })
+                .bind('mousedown touchstart',function(){me.prev(); return false;})
+                .appendTo(this.container);
+
+            $("<div>", { 'class': "iviewer_next iviewer_common iviewer_button" })
+                .bind('mousedown touchstart',function(){me.next(); return false;})
+                .appendTo(this.container);
+
+            $("<div>", { 'class': "iviewer_pages iviewer_common iviewer_button" })
+                .appendTo(this.container);
+
+            this.updatePages();
+        }
 
         this.update_status(); //initial status update
     }

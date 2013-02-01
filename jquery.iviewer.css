@@ -59,3 +59,22 @@
     left: 262px;
     background: #fff url(img/iviewer.rotate_right.png) center center no-repeat;
 }
+
+.iviewer_prev {
+    left: 297px;
+    background: #fff url(img/iviewer.prev.gif) center center no-repeat;
+}
+
+.iviewer_next {
+    left: 333px;
+    background: #fff url(img/iviewer.next.gif) center center no-repeat;
+}
+
+.iviewer_pages {
+    width: 75px;
+    left: 368px;
+    padding: 6px 5px 0 5px;
+    height: 22px;
+    font-size: 14px;
+    background: #fff;
+}
