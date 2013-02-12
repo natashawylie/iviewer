@@ -1,3 +1,7 @@
+.viewer {
+    -ms-touch-action: none;
+}
+
 .iviewer_common {
     position:absolute;
     bottom:10px;
