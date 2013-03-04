@@ -713,6 +713,19 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                     x: this.img_object.x(),
                     y: this.img_object.y()
                 };
+            case 'frame':
+                var w = 1. * this.img_object.orig_width();
+                var h = 1. * this.img_object.orig_height();
+                var upperleft = this.containerToImage(0, 0);
+                var lowerright = this.containerToImage(this.container.width(), this.container.height());
+                // Return values in percentage
+                return {
+                    x: upperleft.x / w,
+                    y: upperleft.y / h,
+                    w: (lowerright.x - upperleft.x) / w,
+                    h: (lowerright.y - upperleft.y) / h,
+                    z: this.current_zoom,
+                };
         }
     },
 
