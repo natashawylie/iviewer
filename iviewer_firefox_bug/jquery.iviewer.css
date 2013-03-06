@@ -1,0 +1,39 @@
+.viewer {
+    -ms-touch-action: none;
+    position: relative;
+}
+
+.iviewer_common {
+    position: absolute;
+    bottom: 10px;
+    border: 1px  solid #000;
+    height: 28px;
+    z-index: 5000;
+}
+
+.iviewer_button {
+    width: 26px;
+    cursor: pointer;
+    background-position: center center;
+    background-repeat: no-repeat;
+    border: 0px;
+}
+
+.iviewer_zoom_in {
+    left: 20px;
+    background: url(../icons/zoom-in.png);
+}
+
+.iviewer_zoom_out {
+    left: 55px;
+    background: url(../icons/zoom-out.png);
+}
+
+.iviewer_zoom_fit {
+    left: 90px;
+    background: url(../icons/zoom-fit.png);
+}
+
+.iviewer_zoom_zero, .iviewer_zoom_status, .iviewer_rotate_left, .iviewer_rotate_right {
+    display: none;
+}
