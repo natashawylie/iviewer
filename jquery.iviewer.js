@@ -941,7 +941,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      * @param {boolean} skipCss If true, we only set the value and do not touch the dom.
      */
     this.x = setter(function(val, skipCss) { 
-            this._x = val;
+            this._x = isNaN(val) ? 0 : val;
             if (!skipCss) {
                 this._finishAnimation();
                 this._img.css("left",this._x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
@@ -959,7 +959,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      * @param {boolean} skipCss If true, we only set the value and do not touch the dom.
      */
     this.y = setter(function(val, skipCss) {
-            this._y = val;
+            this._y = isNaN(val) ? 0 : val;
             if (!skipCss) {
                 this._finishAnimation();
                 this._img.css("top",this._y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
