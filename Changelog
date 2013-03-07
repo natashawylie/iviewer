@@ -1,6 +1,8 @@
 Version 0.7.7
 
 * IE10 touch support
+* Widget reacts on mouse wheel not only over the image but over the whole
+container
 
 Version 0.7.6 (2013/01/26)
 

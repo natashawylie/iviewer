@@ -256,7 +256,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.img_object = new $.ui.iviewer.ImageObject(this.options.zoom_animation);
 
         if (this.options.mousewheel) {
-            this.img_object.object()
+            this.container
                 .mousewheel(function(ev, delta)
                 {
                     //this event is there instead of containing div, because
