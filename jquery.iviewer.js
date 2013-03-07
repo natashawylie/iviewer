@@ -256,8 +256,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.img_object = new $.ui.iviewer.ImageObject(this.options.zoom_animation);
 
         if (this.options.mousewheel) {
-            this.container
-                .mousewheel(function(ev, delta)
+            this.container.bind('mousewheel.iviewer', function(ev, delta)
                 {
                     //this event is there instead of containing div, because
                     //at opera it triggers many times on div
@@ -326,6 +325,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         $.Widget.prototype.destroy.call( this );
         this._mouseDestroy();
         this.img_object.object().remove();
+        this.container.off('.iviewer');
+        this.container.css('overflow', ''); //cleanup styles on destroy
     },
 
     _updateContainerInfo: function()
