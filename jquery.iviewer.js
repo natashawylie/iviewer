@@ -911,7 +911,12 @@ $.ui.iviewer.ImageObject = function(do_anim) {
 
         img.onerror = error;
 
-        img.src = src;
+        //we need this because sometimes internet explorer 8 fires onload event
+        //right after assignment (synchronously)
+        setTimeout(function() {
+            img.src = src;
+        }, 0);
+
         this.angle(0);
     };
 
@@ -985,7 +990,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
 
             this._angle = deg;
             this._swapDimensions = deg % 180 !== 0;
-            
+
             if (prevSwap !== this._swapDimensions) {
                 var verticalMod = this._swapDimensions ? -1 : 1;
                 this.x(this.x() - verticalMod * this.display_diff() / 2, true);

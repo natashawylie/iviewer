@@ -5,6 +5,8 @@ Version 0.7.7
 container
 * Do not use jQuery.browser to detect for internet explorer filters (fixes
 #44)
+* Force img_object to trigger loaded event asynchronously in all cases (I'm
+looking at you, IE8)
 
 Version 0.7.6 (2013/01/26)
 
