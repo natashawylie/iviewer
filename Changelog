@@ -3,6 +3,8 @@ Version 0.7.7
 * IE10 touch support
 * Widget reacts on mouse wheel not only over the image but over the whole
 container
+* Do not use jQuery.browser to detect for internet explorer filters (fixes
+#44)
 
 Version 0.7.6 (2013/01/26)
 

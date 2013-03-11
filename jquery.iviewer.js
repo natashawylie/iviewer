@@ -120,7 +120,12 @@ var ieTransforms = {
             filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=0, M12=1, M21=-1, M22=0, SizingMethod="auto expand")'
         }
     },
-    useIeTransforms = (jQuery.browser.msie && parseInt(jQuery.browser.version, 10) <= 8);
+    // this test is the inversion of the css filters test from the modernizr project
+    useIeTransforms = function() {
+        var el = document.createElement('div');
+        el.style.cssText = ['-ms-','' ,''].join('filter:blur(2px); ');
+        return !!el.style.cssText && document.documentMode < 9;
+    }();
 
 $.widget( "ui.iviewer", $.ui.mouse, {
     widgetEventPrefix: "iviewer",
@@ -214,7 +219,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         * event is fired when image load error occurs
         */
         onErrorLoad: null
-	},
+    },
 
     _create: function() {
         var me = this;
