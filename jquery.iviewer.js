@@ -268,8 +268,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                     var zoom = (delta > 0)?1:-1,
                         container_offset = me.container.offset(),
                         mouse_pos = {
-                            x: ev.pageX - container_offset.left,
-                            y: ev.pageY - container_offset.top
+                            //jquery.mousewheel 3.1.0 uses strange MozMousePixelScroll event
+                            //which is not being fixed by jQuery.Event
+                            x: (ev.pageX || ev.originalEvent.pageX) - container_offset.left,
+                            y: (ev.pageY || ev.originalEvent.pageX) - container_offset.top
                         };
 
                     me.zoom_by(zoom, mouse_pos);
