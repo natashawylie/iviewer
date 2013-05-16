@@ -122,9 +122,18 @@ var ieTransforms = {
     },
     // this test is the inversion of the css filters test from the modernizr project
     useIeTransforms = function() {
-        var el = document.createElement('div');
-        el.style.cssText = ['-ms-','' ,''].join('filter:blur(2px); ');
-        return !!el.style.cssText && document.documentMode < 9;
+        var modElem = document.createElement('modernizr'),
+		mStyle = modElem.style,
+		omPrefixes = 'Webkit Moz O ms',
+		domPrefixes = omPrefixes.toLowerCase().split(' '),
+        	props = ("transform" + ' ' + domPrefixes.join("Transform ") + "Transform").split(' ');
+        for ( var i in props ) {
+            var prop = props[i];
+            if ( !contains(prop, "-") && mStyle[prop] !== undefined ) {
+                return false;
+            }
+        }
+        return true;
     }();
 
 $.widget( "ui.iviewer", $.ui.mouse, {
