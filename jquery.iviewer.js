@@ -419,6 +419,24 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     /**
+     * fit the part of the image into the container
+     * Coordinates are calculated relative to top left corner with any angle
+     *   @param x a point in image
+     *   @param y a point in image
+     *   @param w width of the image rect to show
+     *   @param h height of the image rect to show
+     */
+    setDisplayRect: function(x, y, w, h) {
+      var zoom = Math.round(Math.max(this.options.width/w, this.options.height/h) * 100);
+
+      x = util.scaleValue(x, zoom);
+      y = util.scaleValue(y, zoom);
+
+      this.set_zoom(zoom, true);
+      this.setCoords(-x, -y);
+    },
+
+    /**
     *   move a point in container to the center of display area
     *   @param x a point in container
     *   @param y a point in container

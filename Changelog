@@ -1,3 +1,8 @@
+Version 0.7.9
+
+* add a setDisplayRect method to allow to fit some precise part of the image
+to the display area
+
 Version 0.7.8 (2013/09/23)
 
 * handle MozMousePixelScroll oddness in mousewheel handler to use proper pageX
