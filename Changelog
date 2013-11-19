@@ -1,3 +1,7 @@
+Version 0.7.9
+
+* DblClick event added
+
 Version 0.7.8 (2013/09/23)
 
 * handle MozMousePixelScroll oddness in mousewheel handler to use proper pageX

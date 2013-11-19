@@ -218,6 +218,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         **/
         onClick: jQuery.noop,
         /**
+        * mouse double click event. If used will delay each click event.
+        * If double click event was fired, clicks will not.
+        *
+        * @param object coords mouse coordinates on the image
+        **/
+        onDblClick: jQuery.noop,
+        /**
         * event is fired when image starts to load
         */
         onStartLoad: null,
@@ -320,11 +327,37 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             }
         }
 
+        var useDblClick = this.options.onDblClick !== jQuery.noop,
+            dblClickTimer = null,
+            clicksNumber = 0;
+
         //init object
         this.img_object.object()
-            //bind mouse events
-            .click(function(e){return me._click(e)})
-                .prependTo(this.container);
+            .prependTo(this.container);
+
+        if (useDblClick) {
+            this.img_object.object()
+                //bind mouse events
+                .click(function(e){
+                    clicksNumber++;
+                    clearTimeout(dblClickTimer);
+
+                    dblClickTimer = setTimeout(function() {
+                        clicksNumber = 0;
+                        me._click(e);
+                    }, 300);
+                })
+                .dblclick(function(e){
+                    if (clicksNumber !== 2) return;
+
+                    clearTimeout(dblClickTimer);
+                    clicksNumber = 0;
+                    me._dblclick(e);
+                });
+        } else {
+            this.img_object.object()
+                .click(function(e){ me._click(e); });
+        }
 
         this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
 
@@ -803,6 +836,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     _click: function(e)
     {
         this._trigger('onClick', 0, this._getMouseCoords(e));
+    },
+
+    _dblclick: function(e)
+    {
+        this._trigger('onDblClick', 0, this._getMouseCoords(e));
     },
 
     /**
