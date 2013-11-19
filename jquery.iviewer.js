@@ -217,6 +217,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         * @param object coords mouse coordinates on the image
         **/
         onClick: jQuery.noop,
+		/**
+		* mouse double click event
+		* @param object coords mouse coordinates on the image
+		**/
+		onDblClick: jQuery.noop,
         /**
         * event is fired when image starts to load
         */
@@ -320,11 +325,33 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             }
         }
 
-        //init object
-        this.img_object.object()
-            //bind mouse events
-            .click(function(e){return me._click(e)})
-                .prependTo(this.container);
+        ///init object
+		//bind mouse events
+		if (this.options.onDblClick == jQuery.noop) {
+			this.img_object.object()
+				.click(function(e){return me._click(e)})
+					.prependTo(this.container);
+		} else {
+			this.img_object.object()
+				.click(function (e) {
+					var that = this;
+					setTimeout(function () {
+						var double = parseInt($(that).data("double"), 10);
+						if (double > 0) {
+							$(that).data("double", double - 1);
+							return false;
+						} else {
+							return me._click(e)
+						}
+					}, 250);
+				})
+				.dblclick(function (e) {
+					$(this).data("double", 2);
+					e.stopPropagation();
+					return me._dblClick(e)
+				})
+				.prependTo(this.container);
+		}
 
         this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
 
@@ -804,6 +831,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     {
         this._trigger('onClick', 0, this._getMouseCoords(e));
     },
+
+	_dblClick: function (e) {
+		this._trigger('onDblClick', 0, this._getMouseCoords(e));
+	},
 
     /**
     *   create zoom buttons info box
