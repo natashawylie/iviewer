@@ -313,7 +313,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                         } else {
                             originalCenter = null;
                         }
-                    }).bind('gesturechange', function(ev) {
+                    }).bind('gesturechange.iviewer', function(ev) {
                         //do not want to import throttle function from underscore
                         var d = +new Date();
                         if ((d - gestureThrottle) < 50) { return; }
@@ -321,7 +321,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                         var zoom = originalScale * ev.originalEvent.scale;
                         me.set_zoom(zoom, originalCenter);
                         ev.preventDefault();
-                    }).bind('gestureend', function(ev) {
+                }).bind('gestureend.iviewer', function(ev) {
                         originalCenter = null;
                     });
             }
@@ -359,7 +359,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                 .click(function(e){ me._click(e); });
         }
 
-        this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
+        this.container.bind('mousemove.iviewer', function(ev) { me._handleMouseMove(ev); });
 
         this.loadImage(this.options.src);
 
