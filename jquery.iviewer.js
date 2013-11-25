@@ -418,22 +418,28 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                 -Math.round((this.img_object.display_height() - this.options.height)/2));
     },
 
-    /**
-     * fit the part of the image into the container
-     * Coordinates are calculated relative to top left corner with any angle
-     *   @param x a point in image
-     *   @param y a point in image
-     *   @param w width of the image rect to show
-     *   @param h height of the image rect to show
+  /**
+     * Set display state of the viewer. The function will take the x,y of the
+     * real image, then zoom and rotate the image and place the point in the
+     * center of display area. Orchestrates set_zoom, moveTo, angle
+     *
+     * Set display state of the viewer. The function will set zoom, angle and
+     * then set container coordinates to the provided value.
+     *
+     *   @param x
+     *   @param y
+     *   @param zoom zoom value for the viewer to set. If falsy the zoom will not be changed
+     *   @param angle absolute angle for the image relative to it's original state. Won't be
+     *                    set if falsy
      */
-    setDisplayRect: function(x, y, w, h) {
-      var zoom = Math.round(Math.max(this.options.width/w, this.options.height/h) * 100);
+    setDisplayState: function(x, y, zoom, angle) {
+      if (zoom) this.set_zoom(zoom, true);
+      if (angle) this.angle(angle, true);
 
-      x = util.scaleValue(x, zoom);
-      y = util.scaleValue(y, zoom);
+//       var coords = this.imageToContainer(x, y);
 
-      this.set_zoom(zoom, true);
-      this.setCoords(-x, -y);
+//       this.moveTo(coords.x, coords.y)
+      this.setCoords(x, y);
     },
 
     /**
@@ -731,7 +737,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             case 'orig_height':
                 if (withoutRotation) {
                     return (this.img_object.angle() % 180 === 0 ? this.img_object[param]() :
-                            param === 'orig_width' ? this.img_object.orig_height() : 
+                            param === 'orig_width' ? this.img_object.orig_height() :
                                                         this.img_object.orig_width());
                 } else {
                     return this.img_object[param]();
@@ -981,7 +987,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      * @param {number} val Coordinate value.
      * @param {boolean} skipCss If true, we only set the value and do not touch the dom.
      */
-    this.x = setter(function(val, skipCss) { 
+    this.x = setter(function(val, skipCss) {
             this._x = val;
             if (!skipCss) {
                 this._finishAnimation();
@@ -1116,7 +1122,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
             width: w,
             height: h,
             top: y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px",
-            left: x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px" 
+            left: x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px"
         };
 
         if (useIeTransforms) {
@@ -1146,7 +1152,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
         if (this._do_anim && !skip_animation) {
             this._img.stop(true)
                 .animate(params, {
-                    duration: 200, 
+                    duration: 200,
                     complete: complete,
                     step: function(now, fx) {
                         if(useIeTransforms && swapDims && (fx.prop === 'top')) {

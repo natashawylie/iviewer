@@ -11,7 +11,7 @@
             var $ = jQuery;
             $(document).ready(function(){
                   var iv1 = $("#viewer").iviewer({
-                       src: "test_image.jpg", 
+                       src: "test_image.jpg",
                        update_on_resize: false,
                        zoom_animation: false,
                        mousewheel: false,
@@ -20,10 +20,10 @@
                        onDrag: function(ev, coords) { }
                   });
 
-                   $("#in").click(function(){ iv1.iviewer('zoom_by', 1); }); 
-                   $("#out").click(function(){ iv1.iviewer('zoom_by', -1); }); 
-                   $("#fit").click(function(){ iv1.iviewer('fit'); }); 
-                   $("#orig").click(function(){ iv1.iviewer('set_zoom', 100); }); 
+                   $("#in").click(function(){ iv1.iviewer('zoom_by', 1); });
+                   $("#out").click(function(){ iv1.iviewer('zoom_by', -1); });
+                   $("#fit").click(function(){ iv1.iviewer('fit'); });
+                   $("#orig").click(function(){ iv1.iviewer('set_zoom', 100); });
                    $("#update").click(function(){ iv1.iviewer('update_container_info'); });
 
                   var iv2 = $("#viewer2").iviewer(
@@ -36,6 +36,25 @@
                     iv2.iviewer('loadImage', "test_image.jpg");
                     return false;
                   });
+
+                function store_state(el) {}
+
+                  $('#viewer3').iviewer({
+                      src: "test_image2.jpg",
+                      zoom: 100,
+                      onDrag: function(ev, coords) {
+                          var el = $(this),
+                              viewer = function() { return el.iviewer.apply(el, arguments); },
+                              coords =  viewer('info', 'coords')
+
+                          localStorage.setItem('viewer3_state', JSON.stringify(coords));
+                      },
+                      onFinishLoad: function(ev) {
+                          var coords = JSON.parse(localStorage.getItem('viewer3_state'));
+
+                          $(this).iviewer('setDisplayState', coords.x, coords.y);
+                      }
+                  })
             });
         </script>
         <link rel="stylesheet" href="../jquery.iviewer.css" />
@@ -47,7 +66,7 @@
                 border: 1px solid black;
                 position: relative;
             }
-            
+
             .wrapper
             {
                 overflow: hidden;
@@ -70,6 +89,9 @@
             <div id="viewer2" class="viewer"></div>
             <br />
             <p><a href="#" id="chimg">Change Image</a></p>
+            <br />
+            <p>This one should restore it's state after page reload
+            <div id="viewer3" class="viewer"></div>
         </div>
     </body>
 </html>
