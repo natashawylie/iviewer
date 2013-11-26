@@ -2,10 +2,9 @@
  * iviewer Widget for jQuery UI
  * https://github.com/can3p/iviewer
  *
- * Copyright (c) 2009 - 2012 Dmitry Petrov
- * Dual licensed under the MIT and GPL licenses.
+ * Copyright (c) 2009 - 2013 Dmitry Petrov
+ * Dual licensed under the MIT license.
  *  - http://www.opensource.org/licenses/mit-license.php
- *  - http://www.gnu.org/copyleft/gpl.html
  *
  * Author: Dmitry Petrov
  * Version: 0.7.8
