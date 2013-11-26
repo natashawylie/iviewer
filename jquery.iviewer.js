@@ -180,6 +180,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         **/
         update_on_resize: true,
         /**
+        * whether to provide zoom on doubleclick functionality
+        */
+        zoom_on_dblclick: true,
+        /**
         * event is triggered when zoom value is changed
         * @param int new zoom value
         * @return boolean if false zoom action is aborted
@@ -223,7 +227,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         *
         * @param object coords mouse coordinates on the image
         **/
-        onDblClick: jQuery.noop,
+        onDblClick: null,
         /**
         * event is fired when image starts to load
         */
@@ -327,7 +331,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             }
         }
 
-        var useDblClick = this.options.onDblClick !== jQuery.noop,
+        //bind doubleclick only if callback is not falsy
+        var useDblClick = !!this.options.onDblClick || this.options.zoom_on_dblclick,
             dblClickTimer = null,
             clicksNumber = 0;
 
@@ -335,6 +340,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.img_object.object()
             .prependTo(this.container);
 
+        //all these tricks are needed to fire either click
+        //or doubleclick events at the same time
         if (useDblClick) {
             this.img_object.object()
                 //bind mouse events
@@ -746,7 +753,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             case 'orig_height':
                 if (withoutRotation) {
                     return (this.img_object.angle() % 180 === 0 ? this.img_object[param]() :
-                            param === 'orig_width' ? this.img_object.orig_height() : 
+                            param === 'orig_width' ? this.img_object.orig_height() :
                                                         this.img_object.orig_width());
                 } else {
                     return this.img_object[param]();
@@ -838,9 +845,21 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this._trigger('onClick', 0, this._getMouseCoords(e));
     },
 
-    _dblclick: function(e)
+    _dblclick: function(ev)
     {
-        this._trigger('onDblClick', 0, this._getMouseCoords(e));
+      if (this.options.onDblClick) {
+        this._trigger('onDblClick', 0, this._getMouseCoords(ev));
+      }
+
+      if (this.options.zoom_on_dblclick) {
+        var container_offset = this.container.offset()
+          , mouse_pos = {
+            x: ev.pageX - container_offset.left,
+            y: ev.pageY - container_offset.top
+          };
+
+        this.zoom_by(1, mouse_pos);
+      }
     },
 
     /**
@@ -1001,7 +1020,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      * @param {number} val Coordinate value.
      * @param {boolean} skipCss If true, we only set the value and do not touch the dom.
      */
-    this.x = setter(function(val, skipCss) { 
+    this.x = setter(function(val, skipCss) {
             this._x = val;
             if (!skipCss) {
                 this._finishAnimation();
@@ -1136,7 +1155,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
             width: w,
             height: h,
             top: y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px",
-            left: x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px" 
+            left: x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px"
         };
 
         if (useIeTransforms) {
@@ -1166,7 +1185,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
         if (this._do_anim && !skip_animation) {
             this._img.stop(true)
                 .animate(params, {
-                    duration: 200, 
+                    duration: 200,
                     complete: complete,
                     step: function(now, fx) {
                         if(useIeTransforms && swapDims && (fx.prop === 'top')) {

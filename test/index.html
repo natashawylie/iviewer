@@ -11,7 +11,7 @@
             var $ = jQuery;
             $(document).ready(function(){
                   var iv1 = $("#viewer").iviewer({
-                       src: "test_image.jpg", 
+                       src: "test_image.jpg",
                        update_on_resize: false,
                        zoom_animation: false,
                        mousewheel: false,
@@ -20,10 +20,10 @@
                        onDrag: function(ev, coords) { }
                   });
 
-                   $("#in").click(function(){ iv1.iviewer('zoom_by', 1); }); 
-                   $("#out").click(function(){ iv1.iviewer('zoom_by', -1); }); 
-                   $("#fit").click(function(){ iv1.iviewer('fit'); }); 
-                   $("#orig").click(function(){ iv1.iviewer('set_zoom', 100); }); 
+                   $("#in").click(function(){ iv1.iviewer('zoom_by', 1); });
+                   $("#out").click(function(){ iv1.iviewer('zoom_by', -1); });
+                   $("#fit").click(function(){ iv1.iviewer('fit'); });
+                   $("#orig").click(function(){ iv1.iviewer('set_zoom', 100); });
                    $("#update").click(function(){ iv1.iviewer('update_container_info'); });
 
                   var iv2 = $("#viewer2").iviewer(
@@ -47,7 +47,7 @@
                 border: 1px solid black;
                 position: relative;
             }
-            
+
             .wrapper
             {
                 overflow: hidden;
