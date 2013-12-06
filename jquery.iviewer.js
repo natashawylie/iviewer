@@ -53,7 +53,6 @@ mouseProto._mouseInit = function() {
         return self._mouseDown(makeMouseEvent(event));
     });
 
-    var self = this;
     // these delegates are required to keep context
     this._mouseMoveDelegate = function(event) {
         if (gesturesSupport && event.originalEvent.touches && event.originalEvent.touches.length > 1) { return; }
@@ -602,15 +601,16 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         }
 
         /* we fake these values to make fit zoom properly work */
+        var old_x, old_y;
         if(this.current_zoom == "fit")
         {
-            var old_x = zoom_center.x + Math.round(this.img_object.orig_width()/2);
-            var old_y = zoom_center.y + Math.round(this.img_object.orig_height()/2);
+            old_x = zoom_center.x + Math.round(this.img_object.orig_width()/2);
+            old_y = zoom_center.y + Math.round(this.img_object.orig_height()/2);
             this.current_zoom = 100;
         }
         else {
-            var old_x = -this.img_object.x() + zoom_center.x;
-            var old_y = -this.img_object.y() + zoom_center.y
+            old_x = -this.img_object.x() + zoom_center.x;
+            old_y = -this.img_object.y() + zoom_center.y;
         }
 
         var new_width = util.scaleValue(this.img_object.orig_width(), new_zoom);
