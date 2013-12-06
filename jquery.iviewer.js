@@ -72,7 +72,7 @@ mouseProto._mouseInit = function() {
         .bind('touchend.' + this.widgetName, this._mouseUpDelegate);
 
     _mouseInit.apply(this);
-}
+};
 
 /**
  * Simple implementation of jQuery like getters/setters
@@ -564,7 +564,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     _getMouseCoords : function(e)
     {
-        var containerOffset = this.container.offset();
+        var containerOffset = this.container.offset(),
             coords = this.containerToImage(e.pageX - containerOffset.left, e.pageY - containerOffset.top);
 
         return coords;
@@ -704,8 +704,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             return 0;
         }
 
-        function div(val1,val2) { return val1 / val2 };
-        function mul(val1,val2) { return val1 * val2 };
+        function div(val1,val2) { return val1 / val2; };
+        function mul(val1,val2) { return val1 * val2; };
 
         var func = (value > this.options.zoom_base)?mul:div;
         var sgn = (value > this.options.zoom_base)?1:-1;
@@ -1008,7 +1008,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      */
     this.display_width = this._dimension('display', 'width'),
     this.display_height = this._dimension('display', 'height'),
-    this.display_diff = function() { return Math.floor( this.display_width() - this.display_height() ) };
+    this.display_diff = function() { return Math.floor( this.display_width() - this.display_height() ); };
     this.orig_width = this._dimension('orig', 'width'),
     this.orig_height = this._dimension('orig', 'height'),
 
