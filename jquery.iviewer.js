@@ -182,6 +182,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         */
         zoom_on_dblclick: true,
         /**
+        * if true the image will fill the container and the image will be distorted
+        */
+        fill_container: false,
+        /**
         * event is triggered when zoom value is changed
         * @param int new zoom value
         * @return boolean if false zoom action is aborted
@@ -405,6 +409,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this.container.addClass("iviewer_loading");
         this.img_object.load(src, function() {
+            me._fill_orig_dimensions = { width: me.img_object.orig_width(), height: me.img_object.orig_height() };
             me._imageLoaded(src);
         }, function() {
             me._trigger("onErrorLoad", 0, src);
@@ -423,6 +428,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         }
 
         this._trigger('onFinishLoad', 0, src);
+
+        if(this.options.fill_container)
+        {
+          this.fill_container(true);
+        }
     },
 
     /**
@@ -568,6 +578,30 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             coords = this.containerToImage(e.pageX - containerOffset.left, e.pageY - containerOffset.top);
 
         return coords;
+    },
+
+    /**
+    * fills container entirely by distorting image
+    *
+    * @param {boolean} fill wether to fill the container entirely or not.
+    **/
+    fill_container: function(fill)
+    {
+        this.options.fill_container = fill;
+        if(fill)
+        {
+            var ratio = this.options.width / this.options.height;
+            if (ratio > 1)
+                this.img_object.orig_width(this.img_object.orig_height() * ratio);
+            else
+                this.img_object.orig_height(this.img_object.orig_width() * ratio);
+        }
+        else
+        {
+            this.img_object.orig_width(this._fill_orig_dimensions.width);
+            this.img_object.orig_height(this._fill_orig_dimensions.height);
+        }
+        this.set_zoom(this.current_zoom);
     },
 
     /**

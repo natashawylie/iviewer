@@ -1,5 +1,6 @@
 Version 0.7.9
 
+* Option to fill container
 * DblClick event added
 * Zoom on double click
 * Move more events to the iviewer namespace
