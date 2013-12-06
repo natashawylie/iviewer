@@ -51,9 +51,8 @@ mouseProto._mouseInit = function() {
         if (gesturesSupport && event.originalEvent.touches.length > 1) { return; }
         self._touchActive = true;
         return self._mouseDown(makeMouseEvent(event));
-    })
+    });
 
-    var self = this;
     // these delegates are required to keep context
     this._mouseMoveDelegate = function(event) {
         if (gesturesSupport && event.originalEvent.touches && event.originalEvent.touches.length > 1) { return; }
@@ -393,7 +392,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
     update: function()
     {
-        this._updateContainerInfo()
+        this._updateContainerInfo();
         this.setCoords(this.img_object.x(), this.img_object.y());
     },
 
@@ -590,7 +589,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         zoom_center = zoom_center || {
             x: Math.round(this.options.width/2),
             y: Math.round(this.options.height/2)
-        }
+        };
 
         if(new_zoom <  this.options.zoom_min)
         {
@@ -602,15 +601,16 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         }
 
         /* we fake these values to make fit zoom properly work */
+        var old_x, old_y;
         if(this.current_zoom == "fit")
         {
-            var old_x = zoom_center.x + Math.round(this.img_object.orig_width()/2);
-            var old_y = zoom_center.y + Math.round(this.img_object.orig_height()/2);
+            old_x = zoom_center.x + Math.round(this.img_object.orig_width()/2);
+            old_y = zoom_center.y + Math.round(this.img_object.orig_height()/2);
             this.current_zoom = 100;
         }
         else {
-            var old_x = -this.img_object.x() + zoom_center.x;
-            var old_y = -this.img_object.y() + zoom_center.y
+            old_x = -this.img_object.x() + zoom_center.x;
+            old_y = -this.img_object.y() + zoom_center.y;
         }
 
         var new_width = util.scaleValue(this.img_object.orig_width(), new_zoom);
@@ -652,7 +652,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         var closest_rate = this.find_closest_zoom_rate(this.current_zoom);
 
         var next_rate = closest_rate + delta;
-        var next_zoom = this.options.zoom_base * Math.pow(this.options.zoom_delta, next_rate)
+        var next_zoom = this.options.zoom_base * Math.pow(this.options.zoom_delta, next_rate);
         if(delta > 0 && next_zoom < this.current_zoom)
         {
             next_zoom *= this.options.zoom_delta;
@@ -971,7 +971,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
                 .removeAttr("height")
                 .removeAttr("style")
                 //max-width is reset, because plugin breaks in the twitter bootstrap otherwise
-                .css({ position: "absolute", top :"0px", left: "0px", maxWidth: "none"})
+                .css({ position: "absolute", top :"0px", left: "0px", maxWidth: "none"});
 
             self._img[0].src = src;
             loaded();
@@ -1097,10 +1097,10 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      */
     this.toOriginalCoords = function(point) {
         switch (this.angle()) {
-            case 0: return { x: point.x, y: point.y }
-            case 90: return { x: point.y, y: this.display_width() - point.x }
-            case 180: return { x: this.display_width() - point.x, y: this.display_height() - point.y }
-            case 270: return { x: this.display_height() - point.y, y: point.x }
+            case 0: return { x: point.x, y: point.y };
+            case 90: return { x: point.y, y: this.display_width() - point.x };
+            case 180: return { x: this.display_width() - point.x, y: this.display_height() - point.y };
+            case 270: return { x: this.display_height() - point.y, y: point.x };
         }
     };
 
@@ -1115,10 +1115,10 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      */
     this.toRealCoords = function(point) {
         switch (this.angle()) {
-            case 0: return { x: this.x() + point.x, y: this.y() + point.y }
-            case 90: return { x: this.x() + this.display_width() - point.y, y: this.y() + point.x}
-            case 180: return { x: this.x() + this.display_width() - point.x, y: this.y() + this.display_height() - point.y}
-            case 270: return { x: this.x() + point.y, y: this.y() + this.display_height() - point.x}
+            case 0: return { x: this.x() + point.x, y: this.y() + point.y };
+            case 90: return { x: this.x() + this.display_width() - point.y, y: this.y() + point.x};
+            case 180: return { x: this.x() + this.display_width() - point.x, y: this.y() + this.display_height() - point.y};
+            case 270: return { x: this.x() + point.y, y: this.y() + this.display_height() - point.x};
         }
     };
 
@@ -1205,7 +1205,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
     //if we set image coordinates we need to be sure that no animation is active atm
     this._finishAnimation = function() {
       this._img.stop(true, true);
-    }
+    };
 
 }).apply($.ui.iviewer.ImageObject.prototype);
 
