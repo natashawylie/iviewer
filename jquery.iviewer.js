@@ -797,6 +797,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                 return this.img_object[param]();
             case 'zoom':
                 return this.current_zoom;
+            case 'options':
+                return this.options;
             case 'src':
                 return this.img_object.object().attr('src');
             case 'coords':
