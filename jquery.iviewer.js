@@ -7,7 +7,7 @@
  *  - http://www.opensource.org/licenses/mit-license.php
  *
  * Author: Dmitry Petrov
- * Version: 0.7.8
+ * Version: 0.7.9
  */
 
 ( function( $, undefined ) {
