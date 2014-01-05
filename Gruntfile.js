@@ -50,5 +50,26 @@ module.exports = function(grunt) {
     grunt.config('uglify.options.banner', banner)
   });
 
-  grunt.registerTask('release', ['version', 'banner', 'uglify'])
+  grunt.registerTask('changelog', function() {
+    var date = new Date()
+      , pad = function(len, symb) {
+          if (symb.toString().length < len) {
+            return '0' + symb;
+          } else {
+            return symb;
+          }
+        }
+      , stamp = '(' + [
+                      date.getFullYear(),
+                      date.getMonth() + 1,
+                      date.getDate()
+                      ].map(pad.bind(null, 2))
+                       .join('/') + ')\n'
+      , file = grunt.file.read('Changelog')
+                .replace(/(.*?)\n/, "$1 " + stamp);
+
+    grunt.file.write('Changelog', file)
+  })
+
+  grunt.registerTask('release', ['version', 'banner', 'changelog', 'uglify'])
 };
