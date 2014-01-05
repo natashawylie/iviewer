@@ -36,6 +36,14 @@
                     iv2.iviewer('loadImage', "test_image.jpg");
                     return false;
                   });
+
+                  var fill = false;
+                  $("#fill").click(function()
+                  {
+                    fill = !fill;
+                    iv2.iviewer('fill_container', fill);
+                    return false;
+                  });
             });
         </script>
         <link rel="stylesheet" href="../jquery.iviewer.css" />
@@ -67,9 +75,12 @@
             </span>
             <div id="viewer" class="viewer"></div>
             <br />
-            <div id="viewer2" class="viewer"></div>
+            <div id="viewer2" class="viewer" style="width: 80%;"></div>
             <br />
-            <p><a href="#" id="chimg">Change Image</a></p>
+            <p>
+              <a href="#" id="chimg">Change Image</a>
+              <a href="#" id="fill">Fill container</a>
+            </p>
         </div>
     </body>
 </html>

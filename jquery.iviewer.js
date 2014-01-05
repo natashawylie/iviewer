@@ -72,7 +72,7 @@ mouseProto._mouseInit = function() {
         .bind('touchend.' + this.widgetName, this._mouseUpDelegate);
 
     _mouseInit.apply(this);
-}
+};
 
 /**
  * Simple implementation of jQuery like getters/setters
@@ -181,6 +181,10 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         * whether to provide zoom on doubleclick functionality
         */
         zoom_on_dblclick: true,
+        /**
+        * if true the image will fill the container and the image will be distorted
+        */
+        fill_container: false,
         /**
         * event is triggered when zoom value is changed
         * @param int new zoom value
@@ -405,6 +409,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this.container.addClass("iviewer_loading");
         this.img_object.load(src, function() {
+            me._fill_orig_dimensions = { width: me.img_object.orig_width(), height: me.img_object.orig_height() };
             me._imageLoaded(src);
         }, function() {
             me._trigger("onErrorLoad", 0, src);
@@ -423,6 +428,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         }
 
         this._trigger('onFinishLoad', 0, src);
+
+        if(this.options.fill_container)
+        {
+          this.fill_container(true);
+        }
     },
 
     /**
@@ -564,10 +574,34 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     _getMouseCoords : function(e)
     {
-        var containerOffset = this.container.offset();
+        var containerOffset = this.container.offset(),
             coords = this.containerToImage(e.pageX - containerOffset.left, e.pageY - containerOffset.top);
 
         return coords;
+    },
+
+    /**
+    * fills container entirely by distorting image
+    *
+    * @param {boolean} fill wether to fill the container entirely or not.
+    **/
+    fill_container: function(fill)
+    {
+        this.options.fill_container = fill;
+        if(fill)
+        {
+            var ratio = this.options.width / this.options.height;
+            if (ratio > 1)
+                this.img_object.orig_width(this.img_object.orig_height() * ratio);
+            else
+                this.img_object.orig_height(this.img_object.orig_width() * ratio);
+        }
+        else
+        {
+            this.img_object.orig_width(this._fill_orig_dimensions.width);
+            this.img_object.orig_height(this._fill_orig_dimensions.height);
+        }
+        this.set_zoom(this.current_zoom);
     },
 
     /**
@@ -704,8 +738,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             return 0;
         }
 
-        function div(val1,val2) { return val1 / val2 };
-        function mul(val1,val2) { return val1 * val2 };
+        function div(val1,val2) { return val1 / val2; };
+        function mul(val1,val2) { return val1 * val2; };
 
         var func = (value > this.options.zoom_base)?mul:div;
         var sgn = (value > this.options.zoom_base)?1:-1;
@@ -763,6 +797,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                 return this.img_object[param]();
             case 'zoom':
                 return this.current_zoom;
+            case 'options':
+                return this.options;
             case 'src':
                 return this.img_object.object().attr('src');
             case 'coords':
@@ -1008,7 +1044,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      */
     this.display_width = this._dimension('display', 'width'),
     this.display_height = this._dimension('display', 'height'),
-    this.display_diff = function() { return Math.floor( this.display_width() - this.display_height() ) };
+    this.display_diff = function() { return Math.floor( this.display_width() - this.display_height() ); };
     this.orig_width = this._dimension('orig', 'width'),
     this.orig_height = this._dimension('orig', 'height'),
 
