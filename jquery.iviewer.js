@@ -376,7 +376,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         {
             this.createui();
         }
-
+        this.controls = this.container.find('.iviewer_common') || {};
         this._mouseInit();
     },
 
@@ -384,6 +384,8 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         $.Widget.prototype.destroy.call( this );
         this._mouseDestroy();
         this.img_object.object().remove();
+        /*removing the controls on destroy*/
+        this.controls.remove();
         this.container.off('.iviewer');
         this.container.css('overflow', ''); //cleanup styles on destroy
     },
@@ -674,7 +676,18 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this.update_status();
     },
-
+    /**
+     * shows or hides the controls
+     * controls are shown/hidden based on user input
+     * @param Boolean flag that specifies whether to show or hide the controls
+     **/
+    showControls: function(flag) {
+        if(flag) {
+            this.controls.fadeIn();
+        } else {
+            this.controls.fadeOut();
+        }
+    },
     /**
     * changes zoom scale by delta
     * zoom is calculated by formula: zoom_base * zoom_delta^rate
