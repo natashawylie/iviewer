@@ -27,22 +27,22 @@
 
 .iviewer_zoom_in {
     left: 20px;
-    background: url(img/iviewer.zoom_in.gif);
+    background: url(img/iviewer.zoom_in.gif) center center no-repeat;
 }
 
 .iviewer_zoom_out {
     left: 55px;
-    background: url(img/iviewer.zoom_out.gif);
+    background: url(img/iviewer.zoom_out.gif) center center no-repeat;
 }
 
 .iviewer_zoom_zero {
     left: 90px;
-    background: url(img/iviewer.zoom_zero.gif);
+    background: url(img/iviewer.zoom_zero.gif) center center no-repeat;
 }
 
 .iviewer_zoom_fit {
     left: 125px;
-    background: url(img/iviewer.zoom_fit.gif);
+    background: url(img/iviewer.zoom_fit.gif) center center no-repeat;
 }
 
 .iviewer_zoom_status {
