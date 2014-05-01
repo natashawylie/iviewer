@@ -125,8 +125,8 @@ var ieTransforms = {
             omPrefixes = 'Webkit Moz O ms',
             domPrefixes = omPrefixes.toLowerCase().split(' '),
             props = ("transform" + ' ' + domPrefixes.join("Transform ") + "Transform").split(' ');
-
-        for ( var i in props ) {
+        /*using 'for' loop instead of 'for in' to avoid issues in IE8*/
+        for ( var i=0; i< props.length;i++ ) {
             var prop = props[i];
             if ( prop.indexOf("-") == -1 && mStyle[prop] !== undefined ) {
                 return false;
