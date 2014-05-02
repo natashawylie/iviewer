@@ -1,3 +1,10 @@
+Version 0.7.10 (2014/05/02)
+
+* IE7&8 fixes
+* remove ui nodes on destroy
+* gallery-like functionality for iviewer-lightbox test page
+
+
 Version 0.7.9 (2014/01/05)
 
 * Grunt based release scripts
