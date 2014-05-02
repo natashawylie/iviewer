@@ -21,7 +21,7 @@ module.exports = function(grunt) {
       },
 
       json: {
-        src: ['package.json', 'iviewer.jquery.json']
+        src: ['package.json', 'iviewer.jquery.json', 'bower.json']
       }
     },
 
