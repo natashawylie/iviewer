@@ -284,53 +284,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.img_object = new $.ui.iviewer.ImageObject(this.options.zoom_animation);
 
         if (this.options.mousewheel) {
-            this.container.bind('mousewheel.iviewer', function(ev, delta)
-                {
-                    //this event is there instead of containing div, because
-                    //at opera it triggers many times on div
-                    var zoom = (delta > 0)?1:-1,
-                        container_offset = me.container.offset(),
-                        mouse_pos = {
-                            //jquery.mousewheel 3.1.0 uses strange MozMousePixelScroll event
-                            //which is not being fixed by jQuery.Event
-                            x: (ev.pageX || ev.originalEvent.pageX) - container_offset.left,
-                            y: (ev.pageY || ev.originalEvent.pageX) - container_offset.top
-                        };
-
-                    me.zoom_by(zoom, mouse_pos);
-                    return false;
-                });
-
-            if (gesturesSupport) {
-                var gestureThrottle = +new Date();
-                var originalScale, originalCenter;
-                this.img_object.object()
-                    // .bind('gesturestart', function(ev) {
-                    .bind('touchstart', function(ev) {
-                        originalScale = me.current_zoom;
-                        var touches = ev.originalEvent.touches,
-                            container_offset;
-                        if (touches.length == 2) {
-                            container_offset = me.container.offset();
-                            originalCenter = {
-                                x: (touches[0].pageX + touches[1].pageX) / 2  - container_offset.left,
-                                y: (touches[0].pageY + touches[1].pageY) / 2 - container_offset.top
-                            };
-                        } else {
-                            originalCenter = null;
-                        }
-                    }).bind('gesturechange.iviewer', function(ev) {
-                        //do not want to import throttle function from underscore
-                        var d = +new Date();
-                        if ((d - gestureThrottle) < 50) { return; }
-                        gestureThrottle = d;
-                        var zoom = originalScale * ev.originalEvent.scale;
-                        me.set_zoom(zoom, originalCenter);
-                        ev.preventDefault();
-                }).bind('gestureend.iviewer', function(ev) {
-                        originalCenter = null;
-                    });
-            }
+            this.activateMouseWheel(this.options.mousewheel);
         }
 
         //bind doubleclick only if callback is not falsy
@@ -394,6 +348,69 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     {
         this.options.height = this.container.height();
         this.options.width = this.container.width();
+    },
+
+    /**
+     * Add or remove the mousewheel effect on the viewer
+     * @param {boolean} isActive
+     * Sample : $('#viewer').iviewer('activateMouseWheel', true);
+     */
+    activateMouseWheel: function(isActive){
+        // Remove all the previous event bind on the mousewheel
+        this.container.unbind('mousewheel.iviewer');
+        if (gesturesSupport) {
+            this.img_object.object().unbind('touchstart').unbind('gesturechange.iviewer').unbind('gestureend.iviewer');
+        }
+
+        if (isActive) {
+            var me = this;
+
+            this.container.bind('mousewheel.iviewer', function(ev, delta)
+                {
+                    //this event is there instead of containing div, because
+                    //at opera it triggers many times on div
+                    var zoom = (delta > 0)?1:-1,
+                        container_offset = me.container.offset(),
+                        mouse_pos = {
+                            //jquery.mousewheel 3.1.0 uses strange MozMousePixelScroll event
+                            //which is not being fixed by jQuery.Event
+                            x: (ev.pageX || ev.originalEvent.pageX) - container_offset.left,
+                            y: (ev.pageY || ev.originalEvent.pageX) - container_offset.top
+                        };
+                    me.zoom_by(zoom, mouse_pos);
+                    return false;
+                });
+
+            if (gesturesSupport) {
+                var gestureThrottle = +new Date();
+                var originalScale, originalCenter;
+                this.img_object.object()
+                    .bind('touchstart', function(ev) {
+                        originalScale = me.current_zoom;
+                        var touches = ev.originalEvent.touches,
+                            container_offset;
+                        if (touches.length == 2) {
+                            container_offset = me.container.offset();
+                            originalCenter = {
+                                x: (touches[0].pageX + touches[1].pageX) / 2  - container_offset.left,
+                                y: (touches[0].pageY + touches[1].pageY) / 2 - container_offset.top
+                            };
+                        } else {
+                            originalCenter = null;
+                        }
+                    }).bind('gesturechange.iviewer', function(ev) {
+                        //do not want to import throttle function from underscore
+                        var d = +new Date();
+                        if ((d - gestureThrottle) < 50) { return; }
+                        gestureThrottle = d;
+                        var zoom = originalScale * ev.originalEvent.scale;
+                        me.set_zoom(zoom, originalCenter);
+                        ev.preventDefault();
+                    }).bind('gestureend.iviewer', function(ev) {
+                        originalCenter = null;
+                    });
+            }
+        }
     },
 
     update: function()
