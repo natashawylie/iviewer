@@ -427,12 +427,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this._trigger('onStartLoad', 0, src);
 
         this.container.addClass("iviewer_loading");
-        var prop = ['naturalWidth', 'naturalHeight'];
-        /**********this fixes the multiple image load issue in modern browsers*******************************/
-        /*if naturalWidth and naturalHeight is available, call the normal load method
-         else call the load method that creates an img element, loads the src and then assigns its height and width to the original image*/
-        var loaderMethod = ((prop[0] in new Image()) && (prop[1] in new Image()))  ? "load": "loadInIE";
-        this.img_object[loaderMethod](src, function() {
+        this.img_object.load(src, function() {
             me._fill_orig_dimensions = { width: me.img_object.orig_width(), height: me.img_object.orig_height() };
             me._imageLoaded(src);
         }, function() {
@@ -1024,18 +1019,23 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      * @param {string} src Image url.
      * @param {Function=} loaded Function will be called on image load.
      */
-    this.loadInIE = function(src, loaded, error) {
+    this.load = function(src, loaded, error) {
         var self = this;
-
         loaded = loaded || jQuery.noop;
         this._loaded = false;
 
-        //If we assign new image url to the this._img IE9 fires onload event and image width and
-        //height are set to zero. So, we create another image object and load image through it.
-        var img = new Image();
+        // #67: don't use image object for loading in case naturalWidth is supported
+        // because later assigning to self._img[0] may result in additional image requesrts.
+        var supportsNaturalWidth = 'naturalWidth' in new Image();
+        var img = supportsNaturalWidth ? self._img[0] : new Image();
+
         img.onload = function() {
             self._loaded = true;
-            self._reset(this.width, this.height);
+            if (supportsNaturalWidth) {
+              self._reset(this.naturalWidth, this.naturalHeight);
+            } else {
+              self._reset(this.width, this.height);
+            }
 
             self._img
                 .removeAttr("width")
@@ -1044,40 +1044,18 @@ $.ui.iviewer.ImageObject = function(do_anim) {
                 //max-width is reset, because plugin breaks in the twitter bootstrap otherwise
                 .css({ position: "absolute", top :"0px", left: "0px", maxWidth: "none"});
 
-            self._img[0].src = src;
+            if (!supportsNaturalWidth) {
+                self._img[0].src = src;
+            }
+
             loaded();
         };
-
         img.onerror = error;
 
         //we need this because sometimes internet explorer 8 fires onload event
         //right after assignment (synchronously)
         setTimeout(function() {
             img.src = src;
-        }, 0);
-
-        this.angle(0);
-    };
-    this.load = function(src, loaded, error) {
-        var self = this;
-        loaded = loaded || jQuery.noop;
-        this._loaded = false;
-        self._img[0].onload = function() {
-            self._loaded = true;
-            self._reset(this.naturalWidth, this.naturalHeight);
-            self._img
-                .removeAttr("width")
-                .removeAttr("height")
-                .removeAttr("style")
-                //max-width is reset, because plugin breaks in the twitter bootstrap otherwise
-                .css({ position: "absolute", top :"0px", left: "0px", maxWidth: "none"});
-            loaded();
-        };
-        self._img[0].onerror = error;
-        //we need this because sometimes internet explorer 8 fires onload event
-        //right after assignment (synchronously)
-        setTimeout(function() {
-            self._img[0].src = src;
         }, 0);
         this.angle(0);
     };
