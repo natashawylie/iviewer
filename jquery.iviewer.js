@@ -427,7 +427,12 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this._trigger('onStartLoad', 0, src);
 
         this.container.addClass("iviewer_loading");
-        this.img_object.load(src, function() {
+        var prop = ['naturalWidth', 'naturalHeight'];
+        /**********this fixes the multiple image load issue in modern browsers*******************************/
+        /*if naturalWidth and naturalHeight is available, call the normal load method
+         else call the load method that creates an img element, loads the src and then assigns its height and width to the original image*/
+        var loaderMethod = ((prop[0] in new Image()) && (prop[1] in new Image()))  ? "load": "loadInIE";
+        this.img_object[loaderMethod](src, function() {
             me._fill_orig_dimensions = { width: me.img_object.orig_width(), height: me.img_object.orig_height() };
             me._imageLoaded(src);
         }, function() {
@@ -1019,7 +1024,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      * @param {string} src Image url.
      * @param {Function=} loaded Function will be called on image load.
      */
-    this.load = function(src, loaded, error) {
+    this.loadInIE = function(src, loaded, error) {
         var self = this;
 
         loaded = loaded || jQuery.noop;
@@ -1053,7 +1058,29 @@ $.ui.iviewer.ImageObject = function(do_anim) {
 
         this.angle(0);
     };
-
+    this.load = function(src, loaded, error) {
+        var self = this;
+        loaded = loaded || jQuery.noop;
+        this._loaded = false;
+        self._img[0].onload = function() {
+            self._loaded = true;
+            self._reset(this.naturalWidth, this.naturalHeight);
+            self._img
+                .removeAttr("width")
+                .removeAttr("height")
+                .removeAttr("style")
+                //max-width is reset, because plugin breaks in the twitter bootstrap otherwise
+                .css({ position: "absolute", top :"0px", left: "0px", maxWidth: "none"});
+            loaded();
+        };
+        self._img[0].onerror = error;
+        //we need this because sometimes internet explorer 8 fires onload event
+        //right after assignment (synchronously)
+        setTimeout(function() {
+            self._img[0].src = src;
+        }, 0);
+        this.angle(0);
+    };
     this._dimension = function(prefix, name) {
         var horiz = '_' + prefix + '_' + name,
             vert = '_' + prefix + '_' + (name === 'height' ? 'width' : 'height');
