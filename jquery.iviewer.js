@@ -118,22 +118,23 @@ var ieTransforms = {
             filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=0, M12=1, M21=-1, M22=0, SizingMethod="auto expand")'
         }
     },
-    // this test is the inversion of the css filters test from the modernizr project
-    useIeTransforms = function() {
-        var modElem = document.createElement('modernizr'),
-            mStyle = modElem.style,
-            omPrefixes = 'Webkit Moz O ms',
-            domPrefixes = omPrefixes.toLowerCase().split(' '),
-            props = ("transform" + ' ' + domPrefixes.join("Transform ") + "Transform").split(' ');
-        /*using 'for' loop instead of 'for in' to avoid issues in IE8*/
-        for ( var i=0; i< props.length;i++ ) {
-            var prop = props[i];
-            if ( prop.indexOf("-") == -1 && mStyle[prop] !== undefined ) {
-                return false;
+    useIeTransforms;
+    // self-firing function sets the boolean useIeTransforms var
+    (function() {
+        // create an element to test its style property for existence of the w3c or vendor-prefixed
+        // transform property. if exists, CSS3 transforms are utilized in the viewer
+        var element = document.createElement('div'),
+            props = ['transform', 'WebkitTransform', 'msTransform', 'MozTransform', 'OTransform'];
+
+        useIeTransforms = true;
+        // iterate the props
+        jQuery.each(props, function(index, prop) {
+            // if element responds to property, we have CSS3 transforms at our disposal
+            if (typeof element.style[prop] !== 'undefined') {
+                useIeTransforms = false;
             }
-        }
-        return true;
-    }();
+        });
+    }());
 
 $.widget( "ui.iviewer", $.ui.mouse, {
     widgetEventPrefix: "iviewer",
