@@ -86,7 +86,7 @@ var setter = function(setter, getter) {
         } else {
             setter.apply(this, arguments);
         }
-    }
+    };
 };
 
 /**
@@ -281,7 +281,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         //init container
         this.container.css("overflow","hidden");
 
-        if (this.options.update_on_resize == true) {
+        if (this.options.update_on_resize === true) {
             $(window).resize(function() {
                 me.update();
             });
@@ -317,7 +317,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                     }, 300);
                 })
                 .dblclick(function(e){
-                    if (clicksNumber !== 2) return;
+                    if (clicksNumber !== 2) { return; }
 
                     clearTimeout(dblClickTimer);
                     clicksNumber = 0;
@@ -445,7 +445,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.container.removeClass("iviewer_loading");
         this.container.addClass("iviewer_cursor");
 
-        if(this.options.zoom == "fit"){
+        if(this.options.zoom === "fit"){
             this.fit(true);
         }
         else {
@@ -616,10 +616,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         if(fill)
         {
             var ratio = this.options.width / this.options.height;
-            if (ratio > 1)
+            if (ratio > 1) {
                 this.img_object.orig_width(this.img_object.orig_height() * ratio);
-            else
+            } else {
                 this.img_object.orig_height(this.img_object.orig_width() * ratio);
+            }
         }
         else
         {
@@ -638,7 +639,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     set_zoom: function(new_zoom, skip_animation, zoom_center)
     {
-        if (this._trigger('onZoom', 0, new_zoom) == false) {
+        if (this._trigger('onZoom', 0, new_zoom) === false) {
             return;
         }
 
@@ -661,7 +662,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         /* we fake these values to make fit zoom properly work */
         var old_x, old_y;
-        if(this.current_zoom == "fit")
+        if(this.current_zoom === "fit")
         {
             old_x = zoom_center.x + Math.round(this.img_object.orig_width()/2);
             old_y = zoom_center.y + Math.round(this.img_object.orig_height()/2);
@@ -769,13 +770,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     find_closest_zoom_rate: function(value)
     {
-        if(value == this.options.zoom_base)
+        if(value === this.options.zoom_base)
         {
             return 0;
         }
 
-        function div(val1,val2) { return val1 / val2; };
-        function mul(val1,val2) { return val1 * val2; };
+        function div(val1,val2) { return val1 / val2; }
+        function mul(val1,val2) { return val1 * val2; }
 
         var func = (value > this.options.zoom_base)?mul:div;
         var sgn = (value > this.options.zoom_base)?1:-1;
@@ -859,7 +860,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.container.addClass("iviewer_drag_cursor");
 
         //#10: fix movement quirks for ipad
-        this._dragInitialized = !(e.originalEvent.changedTouches && e.originalEvent.changedTouches.length==1);
+        this._dragInitialized = !(e.originalEvent.changedTouches && e.originalEvent.changedTouches.length===1);
 
         this.dx = e.pageX - this.img_object.x();
         this.dy = e.pageY - this.img_object.y();
@@ -1084,11 +1085,11 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      *  Note, that dimensions are swapped if image is rotated. It necessary,
      *  because as little as possible code should know about rotation.
      */
-    this.display_width = this._dimension('display', 'width'),
-    this.display_height = this._dimension('display', 'height'),
+    this.display_width = this._dimension('display', 'width');
+    this.display_height = this._dimension('display', 'height');
     this.display_diff = function() { return Math.floor( this.display_width() - this.display_height() ); };
-    this.orig_width = this._dimension('orig', 'width'),
-    this.orig_height = this._dimension('orig', 'height'),
+    this.orig_width = this._dimension('orig', 'width');
+    this.orig_height = this._dimension('orig', 'height');
 
     /**
      * Setter for  X coordinate. If image is rotated we need to additionaly shift an
@@ -1141,7 +1142,7 @@ $.ui.iviewer.ImageObject = function(do_anim) {
                 var verticalMod = this._swapDimensions ? -1 : 1;
                 this.x(this.x() - verticalMod * this.display_diff() / 2, true);
                 this.y(this.y() + verticalMod * this.display_diff() / 2, true);
-            };
+            }
 
             // simplying applying a CSS 3d transform that doesn't do anything will cause the browser
             // to use the GPU for animations. otherwise, 2d transforms don't use the GPU by default.
