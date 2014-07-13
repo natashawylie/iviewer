@@ -1143,7 +1143,9 @@ $.ui.iviewer.ImageObject = function(do_anim) {
                 this.y(this.y() + verticalMod * this.display_diff() / 2, true);
             };
 
-            var cssVal = 'rotate(' + deg + 'deg)',
+            // simplying applying a CSS 3d transform that doesn't do anything will cause the browser
+            // to use the GPU for animations. otherwise, 2d transforms don't use the GPU by default.
+            var cssVal = 'rotate(' + deg + 'deg) translate3d(0, 0, 0)',
                 img = this._img;
 
             jQuery.each(['', '-webkit-', '-moz-', '-o-', '-ms-'], function(i, prefix) {
