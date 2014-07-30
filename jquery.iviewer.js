@@ -446,12 +446,12 @@ $.widget( "ui.iviewer", $.ui.mouse, {
             this.set_zoom(this.options.zoom, true);
         }
 
-        this._trigger('onFinishLoad', 0, src);
-
         if(this.options.fill_container)
         {
           this.fill_container(true);
         }
+
+        this._trigger('onFinishLoad', 0, src);
     },
 
     /**
