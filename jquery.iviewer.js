@@ -1144,12 +1144,15 @@ $.ui.iviewer.ImageObject = function(do_anim) {
                 this.y(this.y() + verticalMod * this.display_diff() / 2, true);
             }
 
-            // simplying applying a CSS 3d transform that doesn't do anything will cause the browser
-            // to use the GPU for animations. otherwise, 2d transforms don't use the GPU by default.
-            var cssVal = 'rotate(' + deg + 'deg) translate3d(0, 0, 0)',
-                img = this._img;
-
+            // for the non-vendor transform prefix and webkit, apply a CSS 3d transform that doesn't do anything to cause the browser
+            // to use the GPU for animations resolving a rendering bug when zooming a rotated image.
             jQuery.each(['', '-webkit-', '-moz-', '-o-', '-ms-'], function(i, prefix) {
+                var cssVal;
+                if (prefix === '' || prefix === '-webkit-') {
+                    cssVal = rotateVal + ' ' + translateVal;
+                } else {
+                    cssVal = rotateVal;
+                }
                 img.css(prefix + 'transform', cssVal);
             });
 
