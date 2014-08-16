@@ -1,7 +1,9 @@
 .viewer {
     -ms-touch-action: none;
 }
-
+.viewer img {
+    image-orientation: from-image;
+}
 .iviewer_common {
     position:absolute;
     bottom:10px;
