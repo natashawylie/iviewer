@@ -600,24 +600,25 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     /**
-	* Helper function, resizes the img_object.display_[width|height]
+	* Helper function, resizes the img_object.orig_[width|height] for comparison
 	**/
 	_resizeImageObject: function(ratio)
 	{
-		this.img_object.display_width(this.img_object.orig_width()*ratio);
-		this.img_object.display_height(this.img_object.orig_height()*ratio);
+		return { width: this.img_object.orig_width()*ratio, height: this.img_object.orig_height()*ratio } 
 	},
+	
     /**
-    * fills container entirely by scale and crop image around the container
+    * fills container entirely by scale, center and 'crop' image edges around the container
     *
     * @param {boolean} fill wether to fill the container entirely or not fill
+	* TODO Understand why we can not move image after call the fill_container after another function, like fit, and, if we call a new image it loads already in fill state and can not be moved
     **/
     fill_container: function(fill)
     {
         this.options.fill_container = fill;
         if(fill)
         {
-			var globalRatio;
+			var fillRatio;
 			var fillZoom;
 			var containerAspect = this.container.width() >= this.container.height() ? 'landscape' : 'portrait';
 			var imageAspect = this.img_object.orig_width() >= this.img_object.orig_height() ? 'landscape' : 'portrait';
@@ -625,24 +626,16 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 			{
 				if(imageAspect == 'landscape')
 				{
-					globalRatio = this.container.height() / this.img_object.orig_height();
-					this._resizeImageObject(globalRatio);
-					if(this.img_object.display_width() < this.container.width())
+					fillRatio = this.container.height() / this.img_object.orig_height();
+					if(this._resizeImageObject(fillRatio).width < this.container.width())
 					{
-						globalRatio = this.container.width() / this.img_object.orig_width();
-						this._resizeImageObject(globalRatio);
+						fillRatio = this.container.width() / this.img_object.orig_width();
 					}
 					
 				}
 				else
 				{
-					globalRatio = this.container.width() / this.img_object.orig_width();
-					this._resizeImageObject(globalRatio);
-					if(this.img_object.display_height() < this.container.height())
-					{
-						globalRatio = this.container.height() / this.img_object.orig_width();
-						this._resizeImageObject(globalRatio);
-					}
+					fillRatio = this.container.width() / this.img_object.orig_width();
 				}
 				
 			}
@@ -650,23 +643,20 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 			{
 				if(imageAspect == 'landscape')
 				{
-					globalRatio = this.container.height() / this.img_object.orig_height();
-					this._resizeImageObject(globalRatio);
+					fillRatio = this.container.height() / this.img_object.orig_height();
 				}
 				else
 				{
-					globalRatio = this.container.width() / this.img_object.orig_width();
-					_resizeImageObject(globalRatio);
-					if(this.img_object.display_height() < this.container.height())
+					fillRatio = this.container.width() / this.img_object.orig_width();
+					if(this._resizeImageObject(fillRatio).height < this.container.height())
 					{
-						globalRatio = this.container.height() / this.img_object.orig_height();
-						this._resizeImageObject(globalRatio);
+						fillRatio = this.container.height() / this.img_object.orig_height();
 					}
 				}
 			}
 			
         }
-		fillZoom = globalRatio*100;
+		fillZoom = fillRatio*100;
         this.set_zoom(fillZoom, true, false);
     },
 
