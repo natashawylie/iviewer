@@ -262,8 +262,6 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         this._angle = 0;
 
-        this._flipH = -1;
-
         this.current_zoom = this.options.zoom;
 
         if(this.options.src === null){
@@ -992,7 +990,6 @@ $.ui.iviewer.ImageObject = function(do_anim) {
     this.x(0, true);
     this.y(0, true);
     this.angle(0);
-    this.flip_h();
 };
 
 
@@ -1006,7 +1003,6 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      */
     this._reset = function(w, h) {
         this._angle = 0;
-        this._flipH = -1;
         this._swapDimensions = false;
         this.x(0);
         this.y(0);
@@ -1015,6 +1011,13 @@ $.ui.iviewer.ImageObject = function(do_anim) {
         this.orig_height(h);
         this.display_width(w);
         this.display_height(h);
+
+        var userAgent = window.navigator.userAgent.toLowerCase();
+        if (userAgent.indexOf('msie') != -1) {
+            this._flipH = 1;
+        } else {
+            this._flipH = -1;
+        }
     };
 
     /**
