@@ -261,6 +261,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.zoom_object = {}; //object to show zoom status
 
         this._angle = 0;
+        this._flipH = -1;
 
         this.current_zoom = this.options.zoom;
 
@@ -1167,14 +1168,19 @@ $.ui.iviewer.ImageObject = function(do_anim) {
                     marginTop: ieTransforms[deg].marginTop * this.display_diff() / 2
                 });
             }
+
+	    // reset flip
+	    this._flipH = -1;
         },
        function() { return this._angle; });
 
     this.flip_h = function() {
         var img = this._img;
+	    var curAngle = this._angle;
         var cssVal = 'scaleX(' + this._flipH + ')';
+
         jQuery.each(['', 'Webkit', 'Moz', 'O', 'ms'], function(i, prefix) {
-            img.css(prefix + 'Transform', cssVal);
+            img.css(prefix + 'Transform', cssVal + ' rotate(' + curAngle + 'deg)');
         });
 
         img.css('filter', 'FlipH');
@@ -1182,7 +1188,6 @@ $.ui.iviewer.ImageObject = function(do_anim) {
 
         this._flipH = -this._flipH;
     };
-
 
     /**
      * Map point in the container coordinates to the point in image coordinates.
