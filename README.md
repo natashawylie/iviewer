@@ -10,9 +10,7 @@ Features:
 
  Support: widget is expected to work in ie6+, ff2+, google chrome, opera 9+, safari.
 
- Demo is availible here:
- * http://test.dpetroff.ru/jquery.iviewer/test/
- * http://test.dpetroff.ru/jquery.iviewer/test/index3.html
+ Demo to come soon
 
 Widget is licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
 
