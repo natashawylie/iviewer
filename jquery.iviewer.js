@@ -600,27 +600,64 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     /**
-    * fills container entirely by distorting image
+	* Helper function, resizes the img_object.orig_[width|height] for comparison
+	**/
+	_resizeImageObject: function(ratio)
+	{
+		return { width: this.img_object.orig_width()*ratio, height: this.img_object.orig_height()*ratio } 
+	},
+	
+    /**
+    * fills container entirely by scale, center and 'crop' image edges around the container
     *
-    * @param {boolean} fill wether to fill the container entirely or not.
+    * @param {boolean} fill wether to fill the container entirely or not fill
+	* TODO Understand why we can not move image after call the fill_container after another function, like fit, and, if we call a new image it loads already in fill state and can not be moved
     **/
     fill_container: function(fill)
     {
         this.options.fill_container = fill;
         if(fill)
         {
-            var ratio = this.options.width / this.options.height;
-            if (ratio > 1)
-                this.img_object.orig_width(this.img_object.orig_height() * ratio);
-            else
-                this.img_object.orig_height(this.img_object.orig_width() * ratio);
+			var fillRatio;
+			var fillZoom;
+			var containerAspect = this.container.width() >= this.container.height() ? 'landscape' : 'portrait';
+			var imageAspect = this.img_object.orig_width() >= this.img_object.orig_height() ? 'landscape' : 'portrait';
+			if(containerAspect == 'landscape')
+			{
+				if(imageAspect == 'landscape')
+				{
+					fillRatio = this.container.height() / this.img_object.orig_height();
+					if(this._resizeImageObject(fillRatio).width < this.container.width())
+					{
+						fillRatio = this.container.width() / this.img_object.orig_width();
+					}
+					
+				}
+				else
+				{
+					fillRatio = this.container.width() / this.img_object.orig_width();
+				}
+				
+			}
+			else
+			{
+				if(imageAspect == 'landscape')
+				{
+					fillRatio = this.container.height() / this.img_object.orig_height();
+				}
+				else
+				{
+					fillRatio = this.container.width() / this.img_object.orig_width();
+					if(this._resizeImageObject(fillRatio).height < this.container.height())
+					{
+						fillRatio = this.container.height() / this.img_object.orig_height();
+					}
+				}
+			}
+			
         }
-        else
-        {
-            this.img_object.orig_width(this._fill_orig_dimensions.width);
-            this.img_object.orig_height(this._fill_orig_dimensions.height);
-        }
-        this.set_zoom(this.current_zoom);
+		fillZoom = fillRatio*100;
+        this.set_zoom(fillZoom, true, false);
     },
 
     /**
