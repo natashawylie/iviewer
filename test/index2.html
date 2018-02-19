@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>jquery.iviewer frame test</title>
+        <script type="text/javascript" src="jquery.js" ></script>
+        <script type="text/javascript" src="jqueryui.js" ></script>
+        <script type="text/javascript" src="jquery.mousewheel.min.js" ></script>
+        <script type="text/javascript" src="../jquery.iviewer.js" ></script>
+        <script type="text/javascript">
+            var $ = jQuery;
+            $(document).ready(function(){
+                var iv = $("#viewer").iviewer( { src: "test_image2.jpg" });
+                var thumbnail = $("#thumbnail");
+
+                // Declare a rectangle frame (div with red border)
+                var frame = $("<div/>")
+                                    .addClass('rectangle_frame')
+                                    .css({
+                                        position: "absolute",
+                                        display: "none",
+                                        width: "0px",
+                                        height: "0px",
+                                        border: "2px solid red"
+                                    })
+                $(".thumbnailContainer").append(frame);
+                
+                function clamp(val, min, max) {
+                    return val < min ? min : ( val > max ? max : val );
+                }
+
+                // Update frame according to the visible information
+                function update_frame() {
+                    var width = 1.0 * $(thumbnail).width();
+                    var height = 1.0 * $(thumbnail).height();
+                    var f = $(iv).iviewer('info', 'frame');
+                    frame.css({
+                        left: Math.floor(clamp(f.x, 0, 1) * width) + 'px',
+                        top: Math.floor(clamp(f.y, 0, 1) * height) + 'px',
+                        width: Math.floor(clamp(f.w, 0, 1) * width) + 'px',
+                        height: Math.floor(clamp(f.h, 0, 1) * height) + 'px',
+                        display: 'block'
+                    });
+                }
+
+                $(iv).bind("ivieweronzoom", update_frame)
+                    .bind("iviewerondrag", update_frame)
+                    .bind("ivieweronfinishload", update_frame);
+                
+            });
+        </script>
+        <link rel="stylesheet" href="../jquery.iviewer.css" />
+        <style>
+          * {
+             margin: 0;
+             padding: 0;
+          }
+
+          .thumbnailContainer {
+             position: relative;
+             bottom: 10px;
+             right: 10px;
+          }
+          
+          .thumbnail {
+             position: absolute;
+             top: 0;
+             left: 0;
+          }
+
+          .viewer
+          {
+             width: 50%;
+             height: 500px;
+             border: 1px solid black;
+             position: relative;
+          }
+          
+          .wrapper
+          {
+             overflow: hidden;
+          }
+        </style>
+    </head>
+    <body>
+        <h1>JQuery.iviewer test</h1>
+        <!-- wrapper div is needed for opera because it shows scroll bars for reason -->
+        <div class="wrapper">
+          <div id="viewer" class="viewer"></div>
+        </div>
+        <div class="thumbnailContainer"><img id="thumbnail" class="thumbnail" width="256" height="171" src="test_image2.jpg"></div>
+    </body>
+</html>
