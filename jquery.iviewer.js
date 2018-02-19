@@ -86,7 +86,7 @@ var setter = function(setter, getter) {
         } else {
             setter.apply(this, arguments);
         }
-    }
+    };
 };
 
 /**
@@ -118,26 +118,32 @@ var ieTransforms = {
             filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=0, M12=1, M21=-1, M22=0, SizingMethod="auto expand")'
         }
     },
-    // this test is the inversion of the css filters test from the modernizr project
-    useIeTransforms = function() {
-        var modElem = document.createElement('modernizr'),
-            mStyle = modElem.style,
-            omPrefixes = 'Webkit Moz O ms',
-            domPrefixes = omPrefixes.toLowerCase().split(' '),
-            props = ("transform" + ' ' + domPrefixes.join("Transform ") + "Transform").split(' ');
-        /*using 'for' loop instead of 'for in' to avoid issues in IE8*/
-        for ( var i=0; i< props.length;i++ ) {
-            var prop = props[i];
-            if ( prop.indexOf("-") == -1 && mStyle[prop] !== undefined ) {
-                return false;
+    useIeTransforms;
+    // self-firing function sets the boolean useIeTransforms var
+    (function() {
+        // create an element to test its style property for existence of the w3c or vendor-prefixed
+        // transform property. if exists, CSS3 transforms are utilized in the viewer
+        var element = document.createElement('div'),
+            props = ['transform', 'WebkitTransform', 'msTransform', 'MozTransform', 'OTransform'];
+
+        useIeTransforms = true;
+        // iterate the props
+        jQuery.each(props, function(index, prop) {
+            // if element responds to property, we have CSS3 transforms at our disposal
+            if (typeof element.style[prop] !== 'undefined') {
+                useIeTransforms = false;
             }
-        }
-        return true;
-    }();
+        });
+    }());
 
 $.widget( "ui.iviewer", $.ui.mouse, {
     widgetEventPrefix: "iviewer",
     options : {
+        /**
+         * optional node reference to append the generated buttons to.
+         * if not supplied, the buttons are appended to the main container.
+        **/
+        toolbar: null,
         /**
         * start zoom value for image, not used now
         * may be equal to "fit" to fit image into container or scale in %
@@ -275,7 +281,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         //init container
         this.container.css("overflow","hidden");
 
-        if (this.options.update_on_resize == true) {
+        if (this.options.update_on_resize === true) {
             $(window).resize(function() {
                 me.update();
             });
@@ -311,7 +317,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
                     }, 300);
                 })
                 .dblclick(function(e){
-                    if (clicksNumber !== 2) return;
+                    if (clicksNumber !== 2) { return; }
 
                     clearTimeout(dblClickTimer);
                     clicksNumber = 0;
@@ -439,7 +445,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.container.removeClass("iviewer_loading");
         this.container.addClass("iviewer_cursor");
 
-        if(this.options.zoom == "fit"){
+        if(this.options.zoom === "fit"){
             this.fit(true);
         }
         else {
@@ -610,10 +616,11 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         if(fill)
         {
             var ratio = this.options.width / this.options.height;
-            if (ratio > 1)
+            if (ratio > 1) {
                 this.img_object.orig_width(this.img_object.orig_height() * ratio);
-            else
+            } else {
                 this.img_object.orig_height(this.img_object.orig_width() * ratio);
+            }
         }
         else
         {
@@ -632,7 +639,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     set_zoom: function(new_zoom, skip_animation, zoom_center)
     {
-        if (this._trigger('onZoom', 0, new_zoom) == false) {
+        if (this._trigger('onZoom', 0, new_zoom) === false) {
             return;
         }
 
@@ -655,7 +662,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
         /* we fake these values to make fit zoom properly work */
         var old_x, old_y;
-        if(this.current_zoom == "fit")
+        if(this.current_zoom === "fit")
         {
             old_x = zoom_center.x + Math.round(this.img_object.orig_width()/2);
             old_y = zoom_center.y + Math.round(this.img_object.orig_height()/2);
@@ -763,13 +770,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     find_closest_zoom_rate: function(value)
     {
-        if(value == this.options.zoom_base)
+        if(value === this.options.zoom_base)
         {
             return 0;
         }
 
-        function div(val1,val2) { return val1 / val2; };
-        function mul(val1,val2) { return val1 * val2; };
+        function div(val1,val2) { return val1 / val2; }
+        function mul(val1,val2) { return val1 * val2; }
 
         var func = (value > this.options.zoom_base)?mul:div;
         var sgn = (value > this.options.zoom_base)?1:-1;
@@ -853,7 +860,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.container.addClass("iviewer_drag_cursor");
 
         //#10: fix movement quirks for ipad
-        this._dragInitialized = !(e.originalEvent.changedTouches && e.originalEvent.changedTouches.length==1);
+        this._dragInitialized = !(e.originalEvent.changedTouches && e.originalEvent.changedTouches.length===1);
 
         this.dx = e.pageX - this.img_object.x();
         this.dy = e.pageY - this.img_object.y();
@@ -932,34 +939,35 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     **/
     createui: function()
     {
-        var me=this;
+        var me=this,
+            container=me.options.toolbar||me.container;
 
         $("<div>", { 'class': "iviewer_zoom_in iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.zoom_by(1); return false;})
-                    .appendTo(this.container);
+                    .appendTo(container);
 
         $("<div>", { 'class': "iviewer_zoom_out iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.zoom_by(- 1); return false;})
-                    .appendTo(this.container);
+                    .appendTo(container);
 
         $("<div>", { 'class': "iviewer_zoom_zero iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.set_zoom(100); return false;})
-                    .appendTo(this.container);
+                    .appendTo(container);
 
         $("<div>", { 'class': "iviewer_zoom_fit iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.fit(this); return false;})
-                    .appendTo(this.container);
+                    .appendTo(container);
 
         this.zoom_object = $("<div>").addClass("iviewer_zoom_status iviewer_common")
-                                    .appendTo(this.container);
+                                    .appendTo(container);
 
         $("<div>", { 'class': "iviewer_rotate_left iviewer_common iviewer_button"})
                     .bind('mousedown touchstart',function(){me.angle(-90); return false;})
-                    .appendTo(this.container);
+                    .appendTo(container);
 
         $("<div>", { 'class': "iviewer_rotate_right iviewer_common iviewer_button" })
                     .bind('mousedown touchstart',function(){me.angle(90); return false;})
-                    .appendTo(this.container);
+                    .appendTo(container);
 
         this.update_status(); //initial status update
     }
@@ -1077,11 +1085,11 @@ $.ui.iviewer.ImageObject = function(do_anim) {
      *  Note, that dimensions are swapped if image is rotated. It necessary,
      *  because as little as possible code should know about rotation.
      */
-    this.display_width = this._dimension('display', 'width'),
-    this.display_height = this._dimension('display', 'height'),
+    this.display_width = this._dimension('display', 'width');
+    this.display_height = this._dimension('display', 'height');
     this.display_diff = function() { return Math.floor( this.display_width() - this.display_height() ); };
-    this.orig_width = this._dimension('orig', 'width'),
-    this.orig_height = this._dimension('orig', 'height'),
+    this.orig_width = this._dimension('orig', 'width');
+    this.orig_height = this._dimension('orig', 'height');
 
     /**
      * Setter for  X coordinate. If image is rotated we need to additionaly shift an
@@ -1134,12 +1142,17 @@ $.ui.iviewer.ImageObject = function(do_anim) {
                 var verticalMod = this._swapDimensions ? -1 : 1;
                 this.x(this.x() - verticalMod * this.display_diff() / 2, true);
                 this.y(this.y() + verticalMod * this.display_diff() / 2, true);
-            };
+            }
 
-            var cssVal = 'rotate(' + deg + 'deg)',
-                img = this._img;
-
+            // for the non-vendor transform prefix and webkit, apply a CSS 3d transform that doesn't do anything to cause the browser
+            // to use the GPU for animations resolving a rendering bug when zooming a rotated image.
             jQuery.each(['', '-webkit-', '-moz-', '-o-', '-ms-'], function(i, prefix) {
+                var cssVal;
+                if (prefix === '' || prefix === '-webkit-') {
+                    cssVal = rotateVal + ' ' + translateVal;
+                } else {
+                    cssVal = rotateVal;
+                }
                 img.css(prefix + 'transform', cssVal);
             });
 
