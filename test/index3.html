@@ -17,32 +17,32 @@
                     var relative_y = y - this.y;
                     return Math.sqrt(relative_x*relative_x + relative_y*relative_y) <= this.r;
                 }
-                
+
                 function isInRectangle(x, y) {
                     return (this.x1 <= x && x <= this.x2) && (this.y1 <= y && y<= this.y2);
                 }
-                
+
                 function getCircleCenter() { return {x: this.x, y: this.y}; }
-                
+
                 function getRectangleCenter() { return {x: (this.x2+this.x1)/2, y: (this.y2+this.y1)/2}; }
-            
+
                 var objects = [
                     {x: 100, y: 100, r: 50, isInObject: isInCircle, title: 'big circle', getCenter: getCircleCenter },
                     {x: 150, y: 250, r: 35, isInObject: isInCircle, title: 'middle circle', getCenter: getCircleCenter },
                     {x: 500, y: 300, r: 10, isInObject: isInCircle, title: 'small circle', getCenter: getCircleCenter },
                     {x1: 200, y1: 400, x2: 300, y2: 500, isInObject: isInRectangle, title: 'rectangle', getCenter: getRectangleCenter }
                 ]
-                
+
                 function whereIam(x, y) {
                     for (var i=0; i<objects.length; i++) {
                         var obj = objects[i];
                         if (obj.isInObject(x, y))
                             return obj;
                     }
-                        
+
                     return null;
                 }
-                
+
                 function showMe(ev, a) {
                     $.each(objects, function(i, object) {
                         if (object.title == $(a).html()) {
@@ -55,50 +55,50 @@
                             pointer.css('display', 'block');
                             pointer.css('left', offset.x+'px');
                             pointer.css('top', offset.y+'px');
-                        }                    
+                        }
                     });
 
                     ev.preventDefault();
                 }
 
                 window.showMe = showMe;
-        
+
                 viewer = $("#viewer1").iviewer({
                     src: "test_active_with_objects.GIF",
 
                     onClick: function(ev, coords) {
                         var object = whereIam(coords.x, coords.y);
-                        
-                        if (object) 
+
+                        if (object)
                             alert('Clicked at ('+coords.x+', '+coords.y+'). This is '+object.title);
                     },
 
                     onMouseMove: function(ev, coords) {
                         var object = whereIam(coords.x, coords.y);
-                        
+
                         if (object) {
                             $('#status').html('You are in ('+coords.x.toFixed(1)+', '+coords.y.toFixed(1)+'). This is '+object.title);
                             this.container.css('cursor', 'crosshair');
                         } else {
                             $('#status').html('You are in ('+coords.x.toFixed(1)+', '+coords.y.toFixed(1)+'). This is empty space');
                             this.container.css('cursor', null);
-                        }                            
+                        }
                     },
-                    
+
                     onBeforeDrag: function(ev, coords) {
                         // remove pointer if image is getting moving
                         // because it's not actual anymore
                         $('#pointer').css('display', 'none');
                         // forbid dragging when cursor is whithin the object
-                        return whereIam(coords.x, coords.y) ? false : true;     
+                        return whereIam(coords.x, coords.y) ? false : true;
                     },
-                    
+
                     onZoom: function(ev) {
                         // remove pointer if image is resizing
                         // because it's not actual anymore
                         $('#pointer').css('display', 'none');
                     },
-                    
+
                     initCallback: function(ev) {
                         this.container.context.iviewer = this;
                     }
@@ -112,14 +112,14 @@
                 padding: 0;
                 margin: 0;
             }
-        
+
             .viewer
             {
                 height: 100%;
                 position: relative;
                 background-color: lightgreen;
             }
-            
+
             .wrapper
             {
                 border: 1px solid black;
@@ -132,7 +132,7 @@
 
                 overflow: hidden; /*for opera*/
             }
-            
+
             .toolbar
             {
                 border: 1px solid black;
@@ -143,7 +143,7 @@
                 right: 1em;
                 height: 3em;
             }
-            
+
             #pointer
             {
                 background-image: url('arrow.png');
@@ -152,22 +152,22 @@
                 position: absolute;
                 display: none;
             }
-            
+
         </style>
     </head>
     <body>
         <div class="toolbar">
             <span id="status"></span>|Show me:
-            <a href="#" onclick="showMe(event, this)">big circle</a>, 
+            <a href="#" onclick="showMe(event, this)">big circle</a>,
             <a href="#" onclick="showMe(event, this)">middle circle</a>,
             <a href="#" onclick="showMe(event, this)">small circle</a>,
             <a href="#" onclick="showMe(event, this)">rectangle</a>
         </div>
-            
+
         <div class="wrapper">
             <div id="viewer1" class="viewer"></div>
         </div>
-        
-        <div id="pointer"></div>             
+
+        <div id="pointer"></div>
     </body>
 </html>
