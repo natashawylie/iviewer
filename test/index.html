@@ -25,6 +25,7 @@
                    $("#fit").click(function(){ iv1.iviewer('fit'); });
                    $("#orig").click(function(){ iv1.iviewer('set_zoom', 100); });
                    $("#update").click(function(){ iv1.iviewer('update_container_info'); });
+                   $('#flip_h').click(function(){ iv1.iviewer('flip_h'); });
 
                   var iv2 = $("#viewer2").iviewer(
                   {
@@ -72,6 +73,7 @@
                 <a id="fit" href="#">fit</a>
                 <a id="orig" href="#">orig</a>
                 <a id="update" href="#">update</a>
+                <a id="flip_h" href="#">flip horizontal</a>
             </span>
             <div id="viewer" class="viewer"></div>
             <br />

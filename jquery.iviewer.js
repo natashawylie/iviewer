@@ -261,6 +261,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         this.zoom_object = {}; //object to show zoom status
 
         this._angle = 0;
+        this._flipH = -1;
 
         this.current_zoom = this.options.zoom;
 
@@ -757,6 +758,13 @@ $.widget( "ui.iviewer", $.ui.mouse, {
     },
 
     /**
+    * Flip horizontal
+    */
+    flip_h: function() {
+        this.img_object.flip_h();
+    },
+
+    /**
     * finds closest multiplier rate for value
     * basing on zoom_base and zoom_delta values from settings
     * @param Number value zoom value to examine
@@ -1004,6 +1012,13 @@ $.ui.iviewer.ImageObject = function(do_anim) {
         this.orig_height(h);
         this.display_width(w);
         this.display_height(h);
+
+        var userAgent = window.navigator.userAgent.toLowerCase();
+        if (userAgent.indexOf('msie') != -1) {
+            this._flipH = 1;
+        } else {
+            this._flipH = -1;
+        }
     };
 
     /**
@@ -1153,8 +1168,26 @@ $.ui.iviewer.ImageObject = function(do_anim) {
                     marginTop: ieTransforms[deg].marginTop * this.display_diff() / 2
                 });
             }
+
+	    // reset flip
+	    this._flipH = -1;
         },
        function() { return this._angle; });
+
+    this.flip_h = function() {
+        var img = this._img;
+	    var curAngle = this._angle;
+        var cssVal = 'scaleX(' + this._flipH + ')';
+
+        jQuery.each(['', 'Webkit', 'Moz', 'O', 'ms'], function(i, prefix) {
+            img.css(prefix + 'Transform', cssVal + ' rotate(' + curAngle + 'deg)');
+        });
+
+        img.css('filter', 'FlipH');
+        img.css('msFilter', 'FlipH');
+
+        this._flipH = -this._flipH;
+    };
 
     /**
      * Map point in the container coordinates to the point in image coordinates.
