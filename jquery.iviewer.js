@@ -246,6 +246,7 @@ $.widget( "ui.iviewer", $.ui.mouse, {
 
     _create: function() {
         var me = this;
+        this.options.clone = $(this.element).clone(true);
 
         //drag variables
         this.dx = 0;
@@ -341,7 +342,9 @@ $.widget( "ui.iviewer", $.ui.mouse, {
         /*removing the controls on destroy*/
         this.controls.remove();
         this.container.off('.iviewer');
+        this.container.removeClass('iviewer_cursor');
         this.container.css('overflow', ''); //cleanup styles on destroy
+        $(this.element).replaceWith(this.options.clone);
     },
 
     _updateContainerInfo: function()
