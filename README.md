@@ -14,5 +14,4 @@ Features:
 
 Widget is licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
 
-
-Docs are available at http://wiki.github.com/can3p/iviewer
+Docs are available at https://github.com/natashawylie/iviewer/wiki
